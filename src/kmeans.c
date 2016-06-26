@@ -53,12 +53,12 @@ int main (int argc, char **argv)
   /* Decompose points among threads */
   p = proc_points_count / num_threads;
   q = proc_points_count % num_threads;
-  int thread_points[num_threads];
+  int thread_points_counts[num_threads];
   int thread_point_start_idx[num_threads];
   int i;
   for (i = 0; i < num_threads; ++i)
   {
-    thread_points[i] = i < q ? p+1 : p;
+    thread_points_counts[i] = i < q ? p+1 : p;
     thread_point_start_idx[i] = (i * p + (i < q ? i : p));
   }
 
@@ -68,19 +68,34 @@ int main (int argc, char **argv)
 
   FILE *f = fopen(points_file, "rb");
   fread(points, sizeof(double), num_points*dim, f);
+  fclose(f);
 
-  // TODO - test code
-  if (world_proc_rank == 0)
+  f = fopen(centers_file, "rb");
+  fread(centers, sizeof(double), num_centers*dim, f);
+  fclose(f);
+
+  /* Data structures for computation */
+  int length_sums_and_counts = num_threads*num_centers*(dim+1);
+  double thread_center_sums_and_counts[length_sums_and_counts];
+  double proc_cluster_assignments[proc_points_count];
+
+  int itr_count = 0;
+  int converged = 0;
+
+  /* Main computation loop */
+  while (!converged && itr_count < max_iterations)
   {
-    printf("x%lf y%lf", points[(num_points-1)*dim], points[(num_points-1)*dim+1]);
+    ++itr_count;
+    reset_array(thread_center_sums_and_counts, length_sums_and_counts);
+
   }
-
-
-
-
 
   MPI_Finalize();
 
+}
+
+void reset_array(double *array, int length)
+{
 }
 
 int parse_args(int argc, char **argv)
