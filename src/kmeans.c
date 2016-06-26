@@ -2,9 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
+#include <mpi.h>
 int parse_args(int, char **);
 
+/* Configuration options */
 int num_points;
 int dim;
 int num_centers;
@@ -18,17 +19,64 @@ char *output_file;
 int num_threads;
 int bind_threads;
 
+/* MPI related variables */
+char *machine_name;
+int node_count;
+
+int world_proc_rank;
+int world_procs_count;
+
+
 int main (int argc, char **argv)
 {
   MPI_Init(&argc, &argv);
 
+  MPI_Comm_rank(MPI_COMM_WORLD, &world_proc_rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &world_procs_count);
+
   
   int ret = parse_args(argc, argv);
  
+  /*
   if (ret)
   {
     return -1;
   }
+  */
+
+  /* Decompose points among processes */
+  int p = num_points / world_procs_count;
+  int q = num_points % world_procs_count;
+  int proc_points_count = world_proc_rank < q ? p + 1 : p;
+  int proc_point_start_idx = world_proc_rank * p + (world_proc_rank < q ? world_proc_rank : q);
+
+  /* Decompose points among threads */
+  p = proc_points_count / num_threads;
+  q = proc_points_count % num_threads;
+  int thread_points[num_threads];
+  int thread_point_start_idx[num_threads];
+  int i;
+  for (i = 0; i < num_threads; ++i)
+  {
+    thread_points[i] = i < q ? p+1 : p;
+    thread_point_start_idx[i] = (i * p + (i < q ? i : p));
+  }
+
+  /* Read points and centers from files */
+  double *points = malloc(sizeof(double)*num_points*dim);
+  double *centers = malloc(sizeof(double)*num_centers*dim);
+
+  FILE *f = fopen(points_file, "rb");
+  fread(points, sizeof(double), num_points*dim, f);
+
+  // TODO - test code
+  if (world_proc_rank == 0)
+  {
+    printf("x%lf y%lf", points[(num_points-1)*dim], points[(num_points-1)*dim+1]);
+  }
+
+
+
 
 
   MPI_Finalize();
@@ -87,8 +135,11 @@ int parse_args(int argc, char **argv)
       default:
         abort ();
       }
-  printf ("Program Arguments\n");
-  printf (" n = %d\n d = %d\n k = %d\n m = %d\n t = %lf\n T = %d\n o = %s\n c = %s\n p = %s\n b = %d\n",num_points, dim, num_centers, max_iterations, err_threshold, num_threads, output_file, centers_file, points_file, bind_threads);
+  if (world_proc_rank == 0)
+  {
+    printf ("Program Arguments\n");
+    printf (" n = %d\n d = %d\n k = %d\n m = %d\n t = %lf\n T = %d\n o = %s\n c = %s\n p = %s\n b = %d\n",num_points, dim, num_centers, max_iterations, err_threshold, num_threads, output_file, centers_file, points_file, bind_threads);
+  }
 
   for (index = optind; index < argc; index++)
     printf ("Non-option argument %s\n", argv[index]);
