@@ -10,8 +10,8 @@ int parse_args(int argc, char **argv);
 void reset_array(double *array, int length);
 double euclidean_distance(double *points1, double* points2, int offset1, int offset2, int dim);
 int find_min_dist_center(double *points, double *centers, int num_centers, int dim, int points_offset);
-void find_nearest_centers(double *points, double *centers, int num_centers, int dim, double *center_sums_and_counts, int *cluster_assignments, int points_count, int points_start_idx, int offset);
-
+void find_nearest_centers(double *points, double *centers, int num_centers, int dim, double *centers_sums_and_counts, int *clusters_assignments, int points_count, int points_start_idx, int offset);
+void accumulate(double *points, double *centers_sums_and_counts, int points_offset, int centers_offset, int dim);
 
 
 
@@ -87,8 +87,8 @@ int main (int argc, char **argv)
 
   /* Data structures for computation */
   int length_sums_and_counts = num_threads*num_centers*(dim+1);
-  double thread_center_sums_and_counts[length_sums_and_counts];
-  int proc_cluster_assignments[proc_points_count];
+  double thread_centers_sums_and_counts[length_sums_and_counts];
+  int proc_clusters_assignments[proc_points_count];
 
   int itr_count = 0;
   int converged = 0;
@@ -97,7 +97,7 @@ int main (int argc, char **argv)
   while (!converged && itr_count < max_iterations)
   {
     ++itr_count;
-    reset_array(thread_center_sums_and_counts, length_sums_and_counts);
+    reset_array(thread_centers_sums_and_counts, length_sums_and_counts);
 
     if (num_threads > 1)
     {
@@ -106,42 +106,110 @@ int main (int argc, char **argv)
     }
     else
     {
-      find_nearest_centers(points, centers, num_centers, dim, thread_center_sums_and_counts, proc_cluster_assignments, thread_points_counts[0], thread_points_start_idx[0], 0);
+      find_nearest_centers(points, centers, num_centers, dim, thread_centers_sums_and_counts, proc_clusters_assignments, thread_points_counts[0], thread_points_start_idx[0], 0);
     }
 
+    if (num_threads > 1) 
+    {
+      int t,c,d;
+      for (t = 1; t < num_threads; ++t)
+      {
+        for (c = 0; c < num_centers; ++c)
+        {
+          for (d = 0; d < (dim+1); ++d)
+          {
+            int offset_within_thread = (c * (dim + 1)) + d;
+            thread_centers_sums_and_counts[offset_within_thread] += thread_centers_sums_and_counts[(t * num_centers * (dim + 1)) + offset_within_thread];
+          }
+        }
+      }
+    }
+
+    if (world_procs_count > 1)
+    {
+      MPI_Allreduce(MPI_IN_PLACE, thread_centers_sums_and_counts, num_centers*(dim+1), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);    
+    }
+
+    converged = 1;
+    int d;
+    double dist;
+    for (i = 0; i < num_centers; ++i)
+    {
+      for (d = 0; d < dim; ++d)
+      {
+        thread_centers_sums_and_counts[(i * (dim + 1)) + d] /= thread_centers_sums_and_counts[(i * (dim + 1)) + dim];
+      }
+
+      dist = euclidean_distance(thread_centers_sums_and_counts, centers, (i * (dim + 1)), i* dim, dim);
+      if (dist > err_threshold)
+      {
+        // Note, can't break heare as centers sums need to be divided to form new centers
+        converged = 0;
+      }
+
+      for (d = 0; d < dim; ++d)
+      {
+        centers[(i * dim) + d] = thread_centers_sums_and_counts[(i * (dim + 1)) + d];
+      }
+    }
+  }
+
+  if (!converged)
+  {
+    if (world_proc_rank == 0)
+    {
+      printf("    Stopping K-Means as max iteration count %d has reached\n", max_iterations);
+    }
+  }
+
+  if (world_proc_rank == 0)
+  {
+    printf("    Done in %d iterations\n", itr_count); 
   }
 
   MPI_Finalize();
 
 }
 
-void find_nearest_centers(double *points, double *centers, int num_centers, int dim, double *center_sums_and_counts, int *cluster_assignments, int points_count, int points_start_idx, int offset)
+void find_nearest_centers(double *points, double *centers, int num_centers, int dim, double *centers_sums_and_counts, int *clusters_assignments, int points_count, int points_start_idx, int offset)
 {
   int i;
   for (i = 0; i < points_count; ++i)
   {
     int points_offset = (points_start_idx + i) * dim;
     int min_dist_center = find_min_dist_center(points, centers, num_centers, dim, points_offset);
-  
+    int centers_offset = offset + min_dist_center*(dim+1);
+    ++centers_sums_and_counts[centers_offset];
+    accumulate(points, centers_sums_and_counts, points_offset, centers_offset, dim);
+    clusters_assignments[i + points_start_idx] = min_dist_center;
   }
   
 }
 
+void accumulate(double *points, double *centers_sums_and_counts, int points_offset, int centers_offset, int dim)
+{
+  int i;
+  for (i = 0; i < dim; ++i)
+  {
+    centers_sums_and_counts[centers_offset+1] += points[points_offset+i];
+  }
+}
+
 int find_min_dist_center(double *points, double *centers, int num_centers, int dim, int points_offset)
 {
-  double min_d = DBL_MAX;
-  int min_d_idx = -1;
+  double min_dist = DBL_MAX;
+  int min_dist_idx = -1;
   int i;
   for (i = 0; i < num_centers; ++i)
   {
-    double d = euclidean_distance(points, centers, points_offset, i*dim, dim);
-    if (d < min_d)
+    double dist = euclidean_distance(points, centers, points_offset, i*dim, dim);
+    if (dist < min_dist)
     {
-      min_d = d;
-      min_d_idx = i;
+      min_dist = dist;
+      min_dist_idx = i;
     }
   }
-  return min_d_idx;
+  return min_dist_idx;
 }
 
 double euclidean_distance(double *points1, double* points2, int offset1, int offset2, int dim)
