@@ -19,6 +19,7 @@ target/
 out/
 classes/
 .vs/
+.settings/
 
 # MSTest test Results
 [Tt]est[Rr]esult*/
@@ -51,6 +52,8 @@ classes/
 *.ipr
 *.iws
 *.opendb
+*.cproject
+*.project
 
 # Visual C++ cache files
 ipch/

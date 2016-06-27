@@ -3,7 +3,7 @@
 
 void write_to_file();
 
-int main(int argc, char *argv[])
+int main2(int argc, char *argv[])
 {
 //	char *file = "E:\\Sali\\git\\github\\esaliya\\ccpp\\KMeansC\\data\\100n_10k\\points.bin";
 	//char *file = "E:\\Sali\\git\\github\\esaliya\\ccpp\\KMeansC\\data\\1n_1k\\points.bin";
