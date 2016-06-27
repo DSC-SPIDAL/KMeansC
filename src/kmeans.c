@@ -47,12 +47,12 @@ int main(int argc, char **argv) {
 
 	int ret = parse_args(argc, argv);
 
-	/*
-	 if (ret)
-	 {
-	 return -1;
+
+	 if (ret) {
+		 MPI_Finalize();
+		 return -1;
 	 }
-	 */
+
 
 	/* Decompose points among processes */
 	int p = num_points / world_procs_count;
@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
 	int i;
 	for (i = 0; i < num_threads; ++i) {
 		thread_points_counts[i] = i < q ? p + 1 : p;
-		thread_points_start_idx[i] = (i * p + (i < q ? i : p));
+		thread_points_start_idx[i] = (i * p + (i < q ? i : q));
 	}
 
 	/* Read points and centers from files */
@@ -166,7 +166,7 @@ int main(int argc, char **argv) {
 	}
 
 	MPI_Finalize();
-
+	return 0;
 }
 
 void find_nearest_centers(double *points, double *centers, int num_centers,
