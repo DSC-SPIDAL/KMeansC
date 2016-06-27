@@ -5,7 +5,8 @@ p=$wd/data/100n_10k/points_LittleEndian.bin
 n=100
 d=2
 k=10
-m=1000
+#m=1000
+m=2
 t=0.00001
 T=$1
 
@@ -31,7 +32,7 @@ if [ $procbind = "core" ]; then
     mpirun --report-bindings --map-by ppr:$ppn:node:PE=$pe --bind-to core -hostfile $hostfile -np $(($nodes*$ppn)) ./kmeans -n$n -d$d -k$k -t$t -c$c -p$p -m$m -o"out.txt" -T$T -b$explicitbind 2>&1 | tee "$pat"_"$n"_"$k"_"$d"_"$m".txt
 elif [ $procbind = "socket" ]; then
     # with IB but bound to socket
-    mpirun --report-bindings --map-by ppr:$ppn:node --bind-to socket -hostfile $hostfile -np $(($nodes*$ppn)) ./kmeans -n$n -d$d -k$k -t$t -c$c -p$p -m$m -o"out.txt" -T$T -b$explicitbind 2>&1 | tee "$pat"_"$n"_"$k"_"$d"_"$m".txt
+    echo mpirun --report-bindings --map-by ppr:$ppn:node --bind-to socket -hostfile $hostfile -np $(($nodes*$ppn)) ./kmeans -n$n -d$d -k$k -t$t -c$c -p$p -m$m -o"out.txt" -T$T -b$explicitbind 2>&1 | tee "$pat"_"$n"_"$k"_"$d"_"$m".txt
 else
     # with IB but bound to none
     mpirun --report-bindings --map-by ppr:$ppn:node --bind-to none -hostfile $hostfile -np $(($nodes*$ppn)) ./kmeans -n$n -d$d -k$k -t$t -c$c -p$p -m$m -o"out.txt" -T$T -b$explicitbind 2>&1 | tee "$pat"_"$n"_"$k"_"$d"_"$m".txt
