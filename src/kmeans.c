@@ -98,17 +98,14 @@ int main(int argc, char **argv) {
 		++itr_count;
 		reset_array(thread_centers_sums_and_counts, length_sums_and_counts);
 
-		printf("*******1. came here in itr %d *******\n", itr_count - 1);
 		if (num_threads > 1) {
 			/* OpenMP parallel region */
 			// remember to send this offset threadIdx*numCenters*(dimension+1)
 		} else {
-			printf("*******2A. came here in itr %d *******\n", itr_count - 1);
 			find_nearest_centers(points, centers, num_centers, dim,
 					thread_centers_sums_and_counts, proc_clusters_assignments,
 					thread_points_counts[0], thread_points_start_idx[0], 0);
 		}
-		printf("*******2. came here in itr %d *******\n", itr_count - 1);
 
 		if (num_threads > 1) {
 			int t, c, d;
@@ -172,7 +169,6 @@ int main(int argc, char **argv) {
 void find_nearest_centers(double *points, double *centers, int num_centers,
 		int dim, double *centers_sums_and_counts, int *clusters_assignments,
 		int points_count, int points_start_idx, int offset) {
-	printf("*******A. came here *******\n");
 	int i;
 	for (i = 0; i < points_count; ++i) {
 		int points_offset = (points_start_idx + i) * dim;
