@@ -5,6 +5,7 @@
 #include <mpi.h>
 #include <float.h>
 #include <math.h>
+#include "kmeans.h"
 
 int parse_args(int argc, char **argv);
 void reset_array(double *array, int length);
@@ -32,13 +33,6 @@ char *output_file;
 int num_threads;
 int bind_threads;
 
-/* MPI related variables */
-char *machine_name;
-int node_count;
-
-int world_proc_rank;
-int world_procs_count;
-
 int main(int argc, char **argv) {
 	MPI_Init(&argc, &argv);
 
@@ -47,12 +41,10 @@ int main(int argc, char **argv) {
 
 	int ret = parse_args(argc, argv);
 
-
-	 if (ret) {
-		 MPI_Finalize();
-		 return -1;
-	 }
-
+	if (ret) {
+		MPI_Finalize();
+		return -1;
+	}
 
 	/* Decompose points among processes */
 	int p = num_points / world_procs_count;
@@ -72,6 +64,10 @@ int main(int argc, char **argv) {
 		thread_points_start_idx[i] = (i * p + (i < q ? i : q));
 	}
 
+	print("\nProgram Started on %s\n", get_current_time());
+
+	print(" Reading points and centers ... ");
+	double t = MPI_Wtime();
 	/* Read points and centers from files */
 	double *points = malloc(sizeof(double) * proc_points_count * dim);
 	double *centers = malloc(sizeof(double) * num_centers * dim);
@@ -84,6 +80,7 @@ int main(int argc, char **argv) {
 	f = fopen(centers_file, "rb");
 	fread(centers, sizeof(double), num_centers * dim, f);
 	fclose(f);
+	print("\n  Done in %lf ms\n", (MPI_Wtime() - t));
 
 	/* Data structures for computation */
 	int length_sums_and_counts = num_threads * num_centers * (dim + 1);
@@ -93,6 +90,9 @@ int main(int argc, char **argv) {
 	int itr_count = 0;
 	int converged = 0;
 
+
+	print(" Computing K-Means ... ");
+	t = MPI_Wtime();
 	/* Main computation loop */
 	while (!converged && itr_count < max_iterations) {
 		++itr_count;
@@ -139,7 +139,7 @@ int main(int argc, char **argv) {
 			dist = euclidean_distance(thread_centers_sums_and_counts, centers,
 					(i * (dim + 1)), i * dim, dim);
 			if (dist > err_threshold) {
-				// Note, can't break heare as centers sums need to be divided to form new centers
+				// Note, can't break here as centers sums need to be divided to form new centers
 				converged = 0;
 			}
 
@@ -153,14 +153,27 @@ int main(int argc, char **argv) {
 	if (!converged) {
 		if (world_proc_rank == 0) {
 			printf(
-					"    Stopping K-Means as max iteration count %d has reached\n",
+					" Stopping K-Means as max iteration count %d has reached\n",
 					max_iterations);
 		}
 	}
 
-	if (world_proc_rank == 0) {
-		printf("    Done in %d iterations\n", itr_count);
+	double times[1];
+	times[0] = MPI_Wtime() - t;
+	if (world_procs_count > 1){
+		MPI_Reduce((world_proc_rank == 0 ? MPI_IN_PLACE : times), times, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 	}
+
+
+	print("\n  Done in %d iterations and %lf ms (avg. across MPI)\n", itr_count, (times[0]*1000/world_procs_count));
+
+
+
+
+	/*f = fopen(output_file, "w+");
+	if (f != NULL) {
+
+	}*/
 
 	MPI_Finalize();
 	return 0;
@@ -175,7 +188,7 @@ void find_nearest_centers(double *points, double *centers, int num_centers,
 		int min_dist_center = find_min_dist_center(points, centers, num_centers,
 				dim, points_offset);
 		int centers_offset = offset + min_dist_center * (dim + 1);
-		++centers_sums_and_counts[centers_offset+dim];
+		++centers_sums_and_counts[centers_offset + dim];
 		accumulate(points, centers_sums_and_counts, points_offset,
 				centers_offset, dim);
 		clusters_assignments[i + points_start_idx] = min_dist_center;
