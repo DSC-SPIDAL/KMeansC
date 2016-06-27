@@ -175,7 +175,7 @@ void find_nearest_centers(double *points, double *centers, int num_centers,
 		int min_dist_center = find_min_dist_center(points, centers, num_centers,
 				dim, points_offset);
 		int centers_offset = offset + min_dist_center * (dim + 1);
-		++centers_sums_and_counts[centers_offset];
+		++centers_sums_and_counts[centers_offset+dim];
 		accumulate(points, centers_sums_and_counts, points_offset,
 				centers_offset, dim);
 		clusters_assignments[i + points_start_idx] = min_dist_center;
@@ -187,7 +187,7 @@ void accumulate(double *points, double *centers_sums_and_counts,
 		int points_offset, int centers_offset, int dim) {
 	int i;
 	for (i = 0; i < dim; ++i) {
-		centers_sums_and_counts[centers_offset + 1] +=
+		centers_sums_and_counts[centers_offset + i] +=
 				points[points_offset + i];
 	}
 }
