@@ -16,6 +16,19 @@
 
 #endif /* SRC_KMEANS_H_ */
 
+int parse_args(int argc, char **argv);
+void reset_array(double *array, int length);
+double euclidean_distance(double *points1, double* points2, int offset1,
+		int offset2, int dim);
+int find_min_dist_center(double *points, double *centers, int num_centers,
+		int dim, int points_offset);
+void find_nearest_centers(double *points, double *centers, int num_centers,
+		int dim, double *centers_sums_and_counts, int *clusters_assignments,
+		int points_count, int points_start_idx, int offset);
+void accumulate(double *points, double *centers_sums_and_counts,
+		int points_offset, int centers_offset, int dim);
+void get_lengths_array(int num_points, int procs_count, int *lengths);
+
 /* MPI related variables */
 char *machine_name;
 int node_count;

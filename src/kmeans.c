@@ -7,18 +7,6 @@
 #include <math.h>
 #include "kmeans.h"
 
-int parse_args(int argc, char **argv);
-void reset_array(double *array, int length);
-double euclidean_distance(double *points1, double* points2, int offset1,
-		int offset2, int dim);
-int find_min_dist_center(double *points, double *centers, int num_centers,
-		int dim, int points_offset);
-void find_nearest_centers(double *points, double *centers, int num_centers,
-		int dim, double *centers_sums_and_counts, int *clusters_assignments,
-		int points_count, int points_start_idx, int offset);
-void accumulate(double *points, double *centers_sums_and_counts,
-		int points_offset, int centers_offset, int dim);
-
 /* Configuration options */
 int num_points;
 int dim;
@@ -66,7 +54,7 @@ int main(int argc, char **argv) {
 
 	print("\nProgram Started on %s\n", get_current_time());
 
-	print(" Reading points and centers ... ");
+	print("  Reading points and centers ... ");
 	double t = MPI_Wtime();
 	/* Read points and centers from files */
 	double *points = malloc(sizeof(double) * proc_points_count * dim);
@@ -80,7 +68,7 @@ int main(int argc, char **argv) {
 	f = fopen(centers_file, "rb");
 	fread(centers, sizeof(double), num_centers * dim, f);
 	fclose(f);
-	print("\n  Done in %lf ms\n", (MPI_Wtime() - t));
+	print("\n    Done in %lf ms (on Rank 0)\n", (MPI_Wtime() - t)*1000);
 
 	/* Data structures for computation */
 	int length_sums_and_counts = num_threads * num_centers * (dim + 1);
@@ -91,7 +79,7 @@ int main(int argc, char **argv) {
 	int converged = 0;
 
 
-	print(" Computing K-Means ... ");
+	print("  Computing K-Means ... ");
 	t = MPI_Wtime();
 	/* Main computation loop */
 	while (!converged && itr_count < max_iterations) {
@@ -153,7 +141,7 @@ int main(int argc, char **argv) {
 	if (!converged) {
 		if (world_proc_rank == 0) {
 			printf(
-					" Stopping K-Means as max iteration count %d has reached\n",
+					"\n      Stopping K-Means as max iteration count %d has reached",
 					max_iterations);
 		}
 	}
@@ -165,16 +153,53 @@ int main(int argc, char **argv) {
 	}
 
 
-	print("\n  Done in %d iterations and %lf ms (avg. across MPI)\n", itr_count, (times[0]*1000/world_procs_count));
+	print("\n    Done in %d iterations and %lf ms (avg. across MPI)\n", itr_count, (times[0]*1000/world_procs_count));
 
-
-
-
-	/*f = fopen(output_file, "w+");
+	f = fopen(output_file, "w+");
 	if (f != NULL) {
+		int *recv = malloc(sizeof(int)*num_points);
+        if (world_procs_count > 1) {
+            // Gather cluster assignments
+            print("  Gathering cluster assignments ...");
+            t = MPI_Wtime();
+            int lengths[world_procs_count];
+            get_lengths_array(num_points, world_procs_count, lengths);
+            int displas[world_procs_count];
+            displas[0] = 0;
+            for (i = 0; i < world_procs_count - 1; ++i){
+            	displas[i+1] = lengths[i]+displas[i];
+            }
 
-	}*/
+            MPI_Gatherv(proc_clusters_assignments, proc_points_count, MPI_INT, recv, lengths, displas, MPI_INT, 0, MPI_COMM_WORLD);
 
+            print("\n    Done in %lf ms (on Rank 0)\n", (MPI_Wtime() - t)*1000);
+        }
+
+        if (world_proc_rank == 0) {
+        	double *all_points = malloc(sizeof(double) * num_points * dim);
+        	FILE *fin = fopen(points_file, "rb");
+        	fread(all_points, sizeof(double), num_points * dim, fin);
+        	fclose(fin);
+
+        	print("  Writing output file ...");
+            t = MPI_Wtime();
+            int d;
+			for (i = 0; i < num_points; ++i) {
+				fprintf(f, "%d\t", i);
+				for (d = 0; d < dim; ++d){
+					fprintf(f, "%lf\t", all_points[i*dim+d]);
+				}
+				fprintf(f, "%d\n", recv[i]);
+			}
+            print("\n    Done in %lf ms (on Rank 0)\n", (MPI_Wtime() - t)*1000);
+        }
+        free(recv);
+        fclose(f);
+	}
+
+	free(points);
+	free(centers);
+	print("Program Terminated on %s\n", get_current_time());
 	MPI_Finalize();
 	return 0;
 }
@@ -237,6 +262,15 @@ void reset_array(double *array, int length) {
 	int i;
 	for (i = 0; i < length; ++i) {
 		array[i] = 0.0;
+	}
+}
+
+void get_lengths_array(int num_points, int procs_count, int *lengths){
+	int p = num_points / procs_count;
+	int q = num_points % procs_count;
+	int i;
+	for (i = 0; i < procs_count; ++i) {
+		lengths[i] = (i > q ? p : p+1);
 	}
 }
 
