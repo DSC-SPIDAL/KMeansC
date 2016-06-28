@@ -170,7 +170,7 @@ int main(int argc, char **argv) {
             	displas[i+1] = lengths[i]+displas[i];
             }
 
-            MPI_Gatherv(proc_clusters_assignments, proc_points_count, MPI_INT, recv, lengths, displas, MPI_INT, 0, MPI_COMM_WORLD);
+            MPI_Allgatherv(proc_clusters_assignments, proc_points_count, MPI_INT, recv, lengths, displas, MPI_INT, 0, MPI_COMM_WORLD);
 
             print("\n    Done in %lf ms (on Rank 0)\n", (MPI_Wtime() - t)*1000);
         }
