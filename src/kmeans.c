@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
 	print("\nProgram Started on %s\n", get_current_time());
 
 	print("  Reading points and centers ... ");
-	double t = MPI_Wtime();
+	double time = MPI_Wtime();
 	/* Read points and centers from files */
 	double *points = malloc(sizeof(double) * proc_points_count * dim);
 	double *centers = malloc(sizeof(double) * num_centers * dim);
@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
 	f = fopen(centers_file, "rb");
 	fread(centers, sizeof(double), num_centers * dim, f);
 	fclose(f);
-	print("\n    Done in %lf ms (on Rank 0)\n", (MPI_Wtime() - t)*1000);
+	print("\n    Done in %lf ms (on Rank 0)\n", (MPI_Wtime() - time)*1000);
 
 	/* Data structures for computation */
 	int length_sums_and_counts = num_threads * num_centers * (dim + 1);
@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
 
 
 	print("  Computing K-Means ... ");
-	t = MPI_Wtime();
+	time = MPI_Wtime();
 	/* Main computation loop */
 	while (!converged && itr_count < max_iterations) {
 		++itr_count;
@@ -150,7 +150,7 @@ int main(int argc, char **argv) {
 	}
 
 	double times[1];
-	times[0] = MPI_Wtime() - t;
+	times[0] = MPI_Wtime() - time;
 	if (world_procs_count > 1){
 		MPI_Reduce((world_proc_rank == 0 ? MPI_IN_PLACE : times), times, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 	}
@@ -164,7 +164,7 @@ int main(int argc, char **argv) {
         if (world_procs_count > 1) {
             // Gather cluster assignments
             print("  Gathering cluster assignments ...");
-            t = MPI_Wtime();
+            time = MPI_Wtime();
             int lengths[world_procs_count];
             get_lengths_array(num_points, world_procs_count, lengths);
             int displas[world_procs_count];
@@ -173,17 +173,9 @@ int main(int argc, char **argv) {
             	displas[i+1] = lengths[i]+displas[i];
             }
 
-            // TODO - test code
-            if (world_proc_rank == 1){
-            	int t;
-            	for (t = 0; t < proc_points_count; ++t) {
-            		printf("%d %d %d\n", t, proc_points_start_idx, proc_clusters_assignments[t]);
-            	}
-            }
-
             MPI_Allgatherv(proc_clusters_assignments, proc_points_count, MPI_INT, recv, lengths, displas, MPI_INT, MPI_COMM_WORLD);
 
-            print("\n    Done in %lf ms (on Rank 0)\n", (MPI_Wtime() - t)*1000);
+            print("\n    Done in %lf ms (on Rank 0)\n", (MPI_Wtime() - time)*1000);
         }
 
         if (world_proc_rank == 0) {
@@ -193,8 +185,9 @@ int main(int argc, char **argv) {
         	fclose(fin);
 
         	print("  Writing output file ...");
-        	int *clusters = (world_proc_rank > 1 ? recv : proc_clusters_assignments);
-            t = MPI_Wtime();
+        	int *clusters = (world_procs_count > 1 ? recv : proc_clusters_assignments);
+
+            time = MPI_Wtime();
             int d;
 			for (i = 0; i < num_points; ++i) {
 				fprintf(f, "%d\t", i);
@@ -203,7 +196,7 @@ int main(int argc, char **argv) {
 				}
 				fprintf(f, "%d\n", clusters[i]);
 			}
-            print("\n    Done in %lf ms (on Rank 0)\n", (MPI_Wtime() - t)*1000);
+            print("\n    Done in %lf ms (on Rank 0)\n", (MPI_Wtime() - time)*1000);
         }
         free(recv);
         fclose(f);
@@ -282,7 +275,7 @@ void get_lengths_array(int num_points, int procs_count, int *lengths){
 	int q = num_points % procs_count;
 	int i;
 	for (i = 0; i < procs_count; ++i) {
-		lengths[i] = (i > q ? p : p+1);
+		lengths[i] = (i >= q ? p : p+1);
 	}
 }
 
