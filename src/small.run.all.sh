@@ -8,7 +8,7 @@ nodes=1
 name="$nodes"n
 nodefile=nodes.$name.txt
 
-./small.run.generic.sh 1 1 $nodefile $nodes $explicitbind $procbind
+#./small.run.generic.sh 1 2 $nodefile $nodes $explicitbind $procbind
 #./small.run.generic.sh 1 24 $nodefile $nodes $explicitbind $procbind
 :<<COMMENT
 ./small.run.generic.sh 2 12 $nodefile $nodes $explicitbind $procbind
@@ -17,5 +17,5 @@ nodefile=nodes.$name.txt
 ./small.run.generic.sh 6 4 $nodefile $nodes $explicitbind $procbind
 ./small.run.generic.sh 8 3 $nodefile $nodes $explicitbind $procbind
 ./small.run.generic.sh 12 2 $nodefile $nodes $explicitbind $procbind
-./small.run.generic.sh 24 1 $nodefile $nodes $explicitbind $procbind
 COMMENT
+./small.run.generic.sh 24 1 $nodefile $nodes $explicitbind $procbind

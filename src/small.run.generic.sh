@@ -5,8 +5,7 @@ p=$wd/data/100n_10k/points_LittleEndian.bin
 n=100
 d=2
 k=10
-#m=1000
-m=2
+m=1000
 t=0.00001
 T=$1
 
