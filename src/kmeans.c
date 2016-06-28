@@ -41,6 +41,9 @@ int main(int argc, char **argv) {
 	int proc_points_start_idx = world_proc_rank * p
 			+ (world_proc_rank < q ? world_proc_rank : q);
 
+	// TODO - debugs
+	printf("Rank: %d proc_points_start_idx %d", world_proc_rank, proc_points_start_idx);
+
 	/* Decompose points among threads */
 	p = proc_points_count / num_threads;
 	q = proc_points_count % num_threads;
@@ -170,7 +173,15 @@ int main(int argc, char **argv) {
             	displas[i+1] = lengths[i]+displas[i];
             }
 
-            MPI_Allgatherv(proc_clusters_assignments, proc_points_count, MPI_INT, recv, lengths, displas, MPI_INT, 0, MPI_COMM_WORLD);
+            // TODO - test code
+            if (world_proc_rank == 1){
+            	int t;
+            	for (t = 0; t < proc_points_count; ++t) {
+            		printf("%d %d %d\n", t, proc_points_start_idx, proc_clusters_assignments[t]);
+            	}
+            }
+
+            MPI_Allgatherv(proc_clusters_assignments, proc_points_count, MPI_INT, recv, lengths, displas, MPI_INT, MPI_COMM_WORLD);
 
             print("\n    Done in %lf ms (on Rank 0)\n", (MPI_Wtime() - t)*1000);
         }
