@@ -182,6 +182,7 @@ int main(int argc, char **argv) {
         	fclose(fin);
 
         	print("  Writing output file ...");
+        	int *clusters = (world_proc_rank > 1 ? recv : proc_clusters_assignments);
             t = MPI_Wtime();
             int d;
 			for (i = 0; i < num_points; ++i) {
@@ -189,7 +190,7 @@ int main(int argc, char **argv) {
 				for (d = 0; d < dim; ++d){
 					fprintf(f, "%lf\t", all_points[i*dim+d]);
 				}
-				fprintf(f, "%d\n", recv[i]);
+				fprintf(f, "%d\n", clusters[i]);
 			}
             print("\n    Done in %lf ms (on Rank 0)\n", (MPI_Wtime() - t)*1000);
         }
