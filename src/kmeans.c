@@ -5,6 +5,7 @@
 #include <mpi.h>
 #include <float.h>
 #include <math.h>
+#include <omp.h>
 #include "kmeans.h"
 
 /* Configuration options */
@@ -89,7 +90,20 @@ int main(int argc, char **argv) {
 
 		if (num_threads > 1) {
 			/* OpenMP parallel region */
-			// remember to send this offset threadIdx*numCenters*(dimension+1)
+			omp_set_num_threads(num_threads);
+#pragma omp parallel
+			{
+				int effective_num_threads = omp_get_num_threads();
+				int thread_id = omp_get_thread_num();
+				if (effective_num_threads != num_threads && thread_id == 0){
+					printf("Warning: Rank %d is running %d threads instead of the expected %d threads", world_proc_rank, effective_num_threads, num_threads);
+				}
+
+				find_nearest_centers(points, centers, num_centers, dim,
+									thread_centers_sums_and_counts, proc_clusters_assignments,
+									thread_points_counts[thread_id], thread_points_start_idx[thread_id], thread_id*num_centers*(dim+1));
+
+			}
 		} else {
 			find_nearest_centers(points, centers, num_centers, dim,
 					thread_centers_sums_and_counts, proc_clusters_assignments,
