@@ -41,8 +41,6 @@ int main(int argc, char **argv) {
 	int proc_points_start_idx = world_proc_rank * p
 			+ (world_proc_rank < q ? world_proc_rank : q);
 
-	// TODO - debugs
-	printf("Rank: %d proc_points_start_idx %d", world_proc_rank, proc_points_start_idx);
 
 	/* Decompose points among threads */
 	p = proc_points_count / num_threads;
