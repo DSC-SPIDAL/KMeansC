@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,7 +8,10 @@
 #include <float.h>
 #include <math.h>
 #include <omp.h>
+#include <sched.h>
+#include <sys/syscall.h>
 #include "kmeans.h"
+#include "juliet.h"
 
 /* Configuration options */
 int num_points;
@@ -97,6 +102,53 @@ int main(int argc, char **argv) {
 				int thread_id = omp_get_thread_num();
 				if (effective_num_threads != num_threads && thread_id == 0){
 					printf("Warning: Rank %d is running %d threads instead of the expected %d threads", world_proc_rank, effective_num_threads, num_threads);
+				}
+
+				cpu_set_t mask;
+
+				if (bind_threads){
+					CPU_ZERO(&mask); // clear mask
+					set_bit_mask(world_proc_rank, thread_id, num_threads, &mask);
+					ret = sched_setaffinity(0, sizeof(mask), &mask);
+					if (ret < 0) {
+						printf(
+								"Error in setting thread affinity at rank %d and thread %d\n",
+								world_proc_rank, thread_id);
+					}
+				}
+
+				if (itr_count == 1){
+					/* Print affinity */
+					// We need the thread pid (even if we are in openmp)
+					pid_t tid = (pid_t) syscall(SYS_gettid);
+					// Get the affinity
+					CPU_ZERO(&mask); // clear mask
+					if (sched_getaffinity(tid, sizeof(mask), &mask) == -1) {
+						printf(
+								"Error cannot do sched_getaffinity at rank %d and thread %d\n",
+								world_proc_rank, thread_id);
+					}
+
+					char *bp;
+					size_t size;
+					FILE *stream;
+
+					stream = open_memstream(&bp, &size);
+					fprintf(stream, "Rank %d Thread %d, tid %d, affinity ",
+							world_proc_rank, thread_id, tid);
+					fflush(stream);
+
+					// Print it
+					int j;
+					for (j = 0; j < CPU_SETSIZE; ++j) {
+						if (CPU_ISSET(j, &mask)) {
+							/*printf("Rank %d Thread %d, tid %d, affinity %d\n",
+							 world_proc_rank, thread_id, tid, j);*/
+							fprintf(stream, "%d ", j);
+						}
+					}
+					fclose(stream);
+					printf("%s\n", bp);
 				}
 
 				find_nearest_centers(points, centers, num_centers, dim,
