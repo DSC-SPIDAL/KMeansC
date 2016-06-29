@@ -117,8 +117,9 @@ int main(int argc, char **argv) {
 					}
 				}
 
+        
 				if (itr_count == 1){
-					/* Print affinity */
+					// Print affinity 
 					// We need the thread pid (even if we are in openmp)
 					pid_t tid = (pid_t) syscall(SYS_gettid);
 					// Get the affinity
@@ -142,14 +143,12 @@ int main(int argc, char **argv) {
 					int j;
 					for (j = 0; j < CPU_SETSIZE; ++j) {
 						if (CPU_ISSET(j, &mask)) {
-							/*printf("Rank %d Thread %d, tid %d, affinity %d\n",
-							 world_proc_rank, thread_id, tid, j);*/
-							fprintf(stream, "%d ", j);
+						  fprintf(stream, "%d ", j);
 						}
 					}
 					fclose(stream);
 					printf("%s\n", bp);
-				}
+				} 
 
 				find_nearest_centers(points, centers, num_centers, dim,
 									thread_centers_sums_and_counts, proc_clusters_assignments,
