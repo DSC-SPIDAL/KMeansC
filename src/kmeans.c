@@ -27,6 +27,8 @@ char *output_file;
 int num_threads;
 int bind_threads;
 
+int verbose = 0;
+
 int main(int argc, char **argv) {
 	MPI_Init(&argc, &argv);
 
@@ -104,21 +106,12 @@ int main(int argc, char **argv) {
 					printf("Warning: Rank %d is running %d threads instead of the expected %d threads", world_proc_rank, effective_num_threads, num_threads);
 				}
 
-				cpu_set_t mask;
-
 				if (bind_threads){
-					CPU_ZERO(&mask); // clear mask
-					set_bit_mask(world_proc_rank, thread_id, num_threads, &mask);
-					ret = sched_setaffinity(0, sizeof(mask), &mask);
-					if (ret < 0) {
-						printf(
-								"Error in setting thread affinity at rank %d and thread %d\n",
-								world_proc_rank, thread_id);
-					}
+					set_thread_affinity(world_proc_rank, thread_id, num_threads);
 				}
 
         
-				if (itr_count == 1){
+				if (verbose && itr_count == 1){
 					print_affinity(world_proc_rank, thread_id);
 				} 
 
@@ -128,6 +121,14 @@ int main(int argc, char **argv) {
 
 			}
 		} else {
+			if (bind_threads) {
+				set_thread_affinity(world_proc_rank, 0, num_threads);
+			}
+
+			if (verbose && itr_count == 1) {
+				print_affinity(world_proc_rank, 0);
+			}
+
 			find_nearest_centers(points, centers, num_centers, dim,
 					thread_centers_sums_and_counts, proc_clusters_assignments,
 					thread_points_counts[0], thread_points_start_idx[0], 0);
@@ -314,12 +315,24 @@ void get_lengths_array(int num_points, int procs_count, int *lengths){
 	}
 }
 
+void set_thread_affinity(int world_proc_rank, int thread_id, int num_threads){
+	cpu_set_t mask;
+	CPU_ZERO(&mask); // clear mask
+	set_bit_mask(world_proc_rank, thread_id, num_threads, &mask);
+	int ret = sched_setaffinity(0, sizeof(mask), &mask);
+	if (ret < 0) {
+		printf(
+				"Error in setting thread affinity at rank %d and thread %d\n",
+				world_proc_rank, thread_id);
+	}
+}
+
 int parse_args(int argc, char **argv) {
 	int index;
 	int c;
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "n:d:k:m:t:T:o::c:p:b:")) != -1)
+	while ((c = getopt(argc, argv, "n:d:k:m:t:T:o::c:p:b:v")) != -1)
 		switch (c) {
 		case 'n':
 			num_points = atoi(optarg);
@@ -350,6 +363,9 @@ int parse_args(int argc, char **argv) {
 			break;
 		case 'b':
 			bind_threads = atoi(optarg);
+			break;
+		case 'v':
+			verbose = 1;
 			break;
 		case '?':
 			if (optopt == 'n' || optopt == 'd' || optopt == 'k' || optopt == 'm'

@@ -19,6 +19,7 @@
 #endif /* SRC_KMEANS_H_ */
 
 int parse_args(int argc, char **argv);
+void set_thread_affinity(int world_proc_rank, int thread_id, int num_threads);
 void reset_array(double *array, int length);
 double euclidean_distance(double *points1, double* points2, int offset1,
 		int offset2, int dim);
