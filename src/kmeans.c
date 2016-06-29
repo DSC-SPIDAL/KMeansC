@@ -119,35 +119,7 @@ int main(int argc, char **argv) {
 
         
 				if (itr_count == 1){
-					// Print affinity 
-					// We need the thread pid (even if we are in openmp)
-					pid_t tid = (pid_t) syscall(SYS_gettid);
-					// Get the affinity
-					CPU_ZERO(&mask); // clear mask
-					if (sched_getaffinity(tid, sizeof(mask), &mask) == -1) {
-						printf(
-								"Error cannot do sched_getaffinity at rank %d and thread %d\n",
-								world_proc_rank, thread_id);
-					}
-
-					char *bp;
-					size_t size;
-					FILE *stream;
-
-					stream = open_memstream(&bp, &size);
-					fprintf(stream, "Rank %d Thread %d, tid %d, affinity ",
-							world_proc_rank, thread_id, tid);
-					fflush(stream);
-
-					// Print it
-					int j;
-					for (j = 0; j < CPU_SETSIZE; ++j) {
-						if (CPU_ISSET(j, &mask)) {
-						  fprintf(stream, "%d ", j);
-						}
-					}
-					fclose(stream);
-					printf("%s\n", bp);
+					print_affinity(world_proc_rank, thread_id);
 				} 
 
 				find_nearest_centers(points, centers, num_centers, dim,
