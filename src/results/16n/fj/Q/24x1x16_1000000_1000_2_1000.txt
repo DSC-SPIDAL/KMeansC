@@ -10,22 +10,22 @@ on the node. In some Linux distributions, the required support is
 contained in the libnumactl and libnumactl-devel packages.
 This is a warning only; your job will continue, though performance may be degraded.
 --------------------------------------------------------------------------
-[j-029:10187] MCW rank 0 is not bound (or bound to all available processors)
-[j-083:250256] MCW rank 7 is not bound (or bound to all available processors)
-[j-079:241839] MCW rank 3 is not bound (or bound to all available processors)
-[j-038:261391] MCW rank 1 is not bound (or bound to all available processors)
-[j-096:165295] MCW rank 15 is not bound (or bound to all available processors)
-[j-087:163921] MCW rank 11 is not bound (or bound to all available processors)
-[j-078:224563] MCW rank 2 is not bound (or bound to all available processors)
-[j-085:09582] MCW rank 9 is not bound (or bound to all available processors)
-[j-084:127557] MCW rank 8 is not bound (or bound to all available processors)
-[j-081:72587] MCW rank 5 is not bound (or bound to all available processors)
-[j-093:118756] MCW rank 13 is not bound (or bound to all available processors)
-[j-080:72659] MCW rank 4 is not bound (or bound to all available processors)
-[j-086:127961] MCW rank 10 is not bound (or bound to all available processors)
-[j-092:130236] MCW rank 12 is not bound (or bound to all available processors)
-[j-082:239420] MCW rank 6 is not bound (or bound to all available processors)
-[j-094:96755] MCW rank 14 is not bound (or bound to all available processors)
+[j-029:17382] MCW rank 0 is not bound (or bound to all available processors)
+[j-079:247807] MCW rank 3 is not bound (or bound to all available processors)
+[j-096:169804] MCW rank 15 is not bound (or bound to all available processors)
+[j-083:256108] MCW rank 7 is not bound (or bound to all available processors)
+[j-038:04926] MCW rank 1 is not bound (or bound to all available processors)
+[j-087:168336] MCW rank 11 is not bound (or bound to all available processors)
+[j-085:14003] MCW rank 9 is not bound (or bound to all available processors)
+[j-084:131970] MCW rank 8 is not bound (or bound to all available processors)
+[j-081:77115] MCW rank 5 is not bound (or bound to all available processors)
+[j-080:77187] MCW rank 4 is not bound (or bound to all available processors)
+[j-078:229203] MCW rank 2 is not bound (or bound to all available processors)
+[j-093:123251] MCW rank 13 is not bound (or bound to all available processors)
+[j-082:243935] MCW rank 6 is not bound (or bound to all available processors)
+[j-086:132363] MCW rank 10 is not bound (or bound to all available processors)
+[j-092:134637] MCW rank 12 is not bound (or bound to all available processors)
+[j-094:101251] MCW rank 14 is not bound (or bound to all available processors)
 Program Arguments
  n = 1000000
  d = 2
@@ -38,13 +38,13 @@ Program Arguments
  p = /N/u/sekanaya/sali/git/github/esaliya/ccpp/KMeansC/data/1e6n_1000k/points_LittleEndian.bin
  b = 0
 
-Program Started on Tue Jun 28 11:17:45 2016
+Program Started on Wed Jun 29 15:23:03 2016
   Reading points and centers ... 
-    Done in 2.573013 ms (on Rank 0)
+    Done in 2.665043 ms (on Rank 0)
   Computing K-Means ... 
-    Done in 998 iterations and 26919.985250 ms (avg. across MPI)
+    Done in 998 iterations and 26899.368182 ms (avg. across MPI)
   Gathering cluster assignments ...
-    Done in 4.117012 ms (on Rank 0)
+    Done in 4.554987 ms (on Rank 0)
   Writing output file ...
-    Done in 1088.340998 ms (on Rank 0)
-Program Terminated on Tue Jun 28 11:18:13 2016
+    Done in 1090.072870 ms (on Rank 0)
+Program Terminated on Wed Jun 29 15:23:31 2016

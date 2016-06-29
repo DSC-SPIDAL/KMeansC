@@ -1,0 +1,22 @@
+Program Arguments
+ n = 1000000
+ d = 2
+ k = 1000
+ m = 1000
+ t = 0.000010
+ T = 2
+ o = out.txt
+ c = /N/u/sekanaya/sali/git/github/esaliya/ccpp/KMeansC/data/1e6n_1000k/centers_LittleEndian.bin
+ p = /N/u/sekanaya/sali/git/github/esaliya/ccpp/KMeansC/data/1e6n_1000k/points_LittleEndian.bin
+ b = 1
+
+Program Started on Wed Jun 29 14:38:18 2016
+  Reading points and centers ... 
+    Done in 1.287222 ms (on Rank 0)
+  Computing K-Means ... 
+    Done in 998 iterations and 15571.145535 ms (avg. across MPI)
+  Gathering cluster assignments ...
+    Done in 18.568993 ms (on Rank 0)
+  Writing output file ...
+    Done in 1300.895929 ms (on Rank 0)
+Program Terminated on Wed Jun 29 14:38:35 2016

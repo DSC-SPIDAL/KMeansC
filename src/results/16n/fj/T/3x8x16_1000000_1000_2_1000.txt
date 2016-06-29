@@ -1,0 +1,34 @@
+--------------------------------------------------------------------------
+WARNING: a request was made to bind a process. While the system
+supports binding the process itself, at least one node does NOT
+support binding memory to the process location.
+
+  Node:  j-029
+
+This usually is due to not having the required NUMA support installed
+on the node. In some Linux distributions, the required support is
+contained in the libnumactl and libnumactl-devel packages.
+This is a warning only; your job will continue, though performance may be degraded.
+--------------------------------------------------------------------------
+Program Arguments
+ n = 1000000
+ d = 2
+ k = 1000
+ m = 1000
+ t = 0.000010
+ T = 3
+ o = out.txt
+ c = /N/u/sekanaya/sali/git/github/esaliya/ccpp/KMeansC/data/1e6n_1000k/centers_LittleEndian.bin
+ p = /N/u/sekanaya/sali/git/github/esaliya/ccpp/KMeansC/data/1e6n_1000k/points_LittleEndian.bin
+ b = 1
+
+Program Started on Wed Jun 29 14:20:39 2016
+  Reading points and centers ... 
+    Done in 1.331806 ms (on Rank 0)
+  Computing K-Means ... 
+    Done in 998 iterations and 14819.225561 ms (avg. across MPI)
+  Gathering cluster assignments ...
+    Done in 13.458967 ms (on Rank 0)
+  Writing output file ...
+    Done in 1211.491108 ms (on Rank 0)
+Program Terminated on Wed Jun 29 14:20:56 2016
