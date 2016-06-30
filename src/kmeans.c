@@ -29,58 +29,32 @@ int bind_threads;
 
 int verbose = 0;
 
-int calculate_kmeans(int max_iterations,
-		double thread_centers_sums_and_counts[length_sums_and_counts],
+int global_buff[1];
+int calculate_kmeans(int thread_id, int max_iterations,
+		double *thread_centers_sums_and_counts,
 		int length_sums_and_counts, int num_threads, int bind_threads,
 		int verbose, int num_centers, int dim,
-		int proc_clusters_assignments[proc_points_count],
-		int thread_points_counts[num_threads],
-		int thread_points_start_idx[num_threads], double err_threshold,
-		double* points, double* centers, int* i) {
+		int *proc_clusters_assignments,
+		int thread_points_count,
+		int thread_points_start_idx, double err_threshold,
+		double *points, double *centers) {
+
 	int converged = 0;
 	int itr_count = 0;
 	/* Main computation loop */
 	while (!converged && itr_count < max_iterations) {
 		++itr_count;
 		reset_array(thread_centers_sums_and_counts, length_sums_and_counts);
-		if (num_threads > 1) {
-			/* OpenMP parallel region */
-			omp_set_num_threads(num_threads);
-			{
-				int effective_num_threads = omp_get_num_threads();
-				int thread_id = omp_get_thread_num();
-				if (effective_num_threads != num_threads && thread_id == 0) {
-					printf(
-							"Warning: Rank %d is running %d threads instead of the expected %d threads",
-							world_proc_rank, effective_num_threads,
-							num_threads);
-				}
-				if (bind_threads) {
-					set_thread_affinity(world_proc_rank, thread_id,
-							num_threads);
-				}
-				if (verbose && itr_count == 1) {
-					print_affinity(world_proc_rank, thread_id);
-				}
-				find_nearest_centers(points, centers, num_centers, dim,
-						thread_centers_sums_and_counts,
-						proc_clusters_assignments,
-						thread_points_counts[thread_id],
-						thread_points_start_idx[thread_id],
-						thread_id * num_centers * (dim + 1));
-			}
-		} else {
-			if (bind_threads) {
-				set_thread_affinity(world_proc_rank, 0, num_threads);
-			}
-			if (verbose && itr_count == 1) {
-				print_affinity(world_proc_rank, 0);
-			}
-			find_nearest_centers(points, centers, num_centers, dim,
-					thread_centers_sums_and_counts, proc_clusters_assignments,
-					thread_points_counts[0], thread_points_start_idx[0], 0);
-		}
-		if (num_threads > 1) {
+
+		find_nearest_centers(points, centers, num_centers, dim,
+				thread_centers_sums_and_counts, proc_clusters_assignments,
+				thread_points_count, thread_points_start_idx,
+				thread_id * num_centers * (dim + 1));
+
+		// TODO - change these barriers to busy barriers later
+#pragma omp barrier
+
+		if (num_threads > 1 && thread_id == 0) {
 			int t, c, d;
 			for (t = 1; t < num_threads; ++t) {
 				for (c = 0; c < num_centers; ++c) {
@@ -93,37 +67,45 @@ int calculate_kmeans(int max_iterations,
 				}
 			}
 		}
-		if (world_procs_count > 1) {
-			MPI_Allreduce(MPI_IN_PLACE, thread_centers_sums_and_counts,
-					num_centers * (dim + 1), MPI_DOUBLE, MPI_SUM,
-					MPI_COMM_WORLD);
+
+		if (thread_id > 0) {
+			if (world_procs_count > 1) {
+				MPI_Allreduce(MPI_IN_PLACE, thread_centers_sums_and_counts,
+						num_centers * (dim + 1), MPI_DOUBLE, MPI_SUM,
+						MPI_COMM_WORLD);
+			}
+
+			converged = 1;
+			int i;
+			int d;
+			double dist;
+			for (i = 0; i < num_centers; ++i) {
+				for (d = 0; d < dim; ++d) {
+					thread_centers_sums_and_counts[(i * (dim + 1)) + d] /=
+							thread_centers_sums_and_counts[(i * (dim + 1)) + dim];
+				}
+				dist = euclidean_distance(thread_centers_sums_and_counts,
+						centers, (i * (dim + 1)), i * dim, dim);
+				if (dist > err_threshold) {
+					// Note, can't break here as centers sums need to be divided to form new centers
+					converged = 0;
+				}
+				for (d = 0; d < dim; ++d) {
+					centers[(i * dim) + d] = thread_centers_sums_and_counts[(i
+							* (dim + 1)) + d];
+				}
+			}
+			global_buff[0] = converged;
 		}
-		converged = 1;
-		int d;
-		double dist;
-		for (*i = 0; *i < num_centers; ++*i) {
-			for (d = 0; d < dim; ++d) {
-				thread_centers_sums_and_counts[(*i * (dim + 1)) + d] /=
-						thread_centers_sums_and_counts[(*i * (dim + 1)) + dim];
-			}
-			dist = euclidean_distance(thread_centers_sums_and_counts, centers,
-					(*i * (dim + 1)), *i * dim, dim);
-			if (dist > err_threshold) {
-				// Note, can't break here as centers sums need to be divided to form new centers
-				converged = 0;
-			}
-			for (d = 0; d < dim; ++d) {
-				centers[(*i * dim) + d] = thread_centers_sums_and_counts[(*i
-						* (dim + 1)) + d];
-			}
-		}
+
+		// TODO - change these barriers to busy barriers later
+#pragma omp barrier
+		converged = global_buff[0];
 	}
-	if (!converged) {
-		if (world_proc_rank == 0) {
-			printf(
-					"\n      Stopping K-Means as max iteration count %d has reached",
-					max_iterations);
-		}
+
+	if (!converged && thread_id == 0) {
+		print("\n      Stopping K-Means as max iteration count %d has reached",
+				max_iterations);
 	}
 	return itr_count;
 }
@@ -186,11 +168,51 @@ int main(int argc, char **argv) {
 	print("  Computing K-Means ... ");
 	time = MPI_Wtime();
 
-	int itr_count = calculate_kmeans(max_iterations,
-			thread_centers_sums_and_counts, length_sums_and_counts, num_threads,
-			bind_threads, verbose, num_centers, dim, proc_clusters_assignments,
-			thread_points_counts, thread_points_start_idx, err_threshold,
-			points, centers, &i);
+	int itr_count;
+	if (num_threads > 1){
+		omp_set_num_threads(num_threads);
+#pragma omp parallel
+		{
+			int effective_num_threads = omp_get_num_threads();
+			int thread_id = omp_get_thread_num();
+
+			if (effective_num_threads != num_threads && thread_id == 0) {
+				printf(
+						"Warning: Rank %d is running %d threads instead of the expected %d threads",
+						world_proc_rank, effective_num_threads, num_threads);
+			}
+			if (bind_threads) {
+				set_thread_affinity(world_proc_rank, thread_id, num_threads);
+			}
+			if (verbose) {
+				print_affinity(world_proc_rank, thread_id);
+			}
+
+			int tmp = calculate_kmeans(thread_id, max_iterations,
+					thread_centers_sums_and_counts, length_sums_and_counts,
+					num_threads, bind_threads, verbose, num_centers, dim,
+					proc_clusters_assignments, thread_points_counts[thread_id],
+					thread_points_start_idx[thread_id], err_threshold, points, centers);
+
+			if (thread_id == 0){
+				itr_count = tmp;
+			}
+		}
+	} else {
+		if (bind_threads) {
+			set_thread_affinity(world_proc_rank, 0, num_threads);
+		}
+		if (verbose) {
+			print_affinity(world_proc_rank, 0);
+		}
+
+		itr_count = calculate_kmeans(0, max_iterations,
+				thread_centers_sums_and_counts, length_sums_and_counts,
+				num_threads, bind_threads, verbose, num_centers, dim,
+				proc_clusters_assignments, thread_points_counts[0],
+				thread_points_start_idx[0], err_threshold, points,
+				centers);
+	}
 
 	double times[1];
 	times[0] = MPI_Wtime() - time;
