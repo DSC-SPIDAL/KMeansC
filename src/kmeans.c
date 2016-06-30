@@ -44,7 +44,12 @@ int calculate_kmeans(int thread_id, int max_iterations,
 	/* Main computation loop */
 	while (!converged && itr_count < max_iterations) {
 		++itr_count;
-		reset_array(thread_centers_sums_and_counts, length_sums_and_counts);
+		if (thread_id == 0){
+			reset_array(thread_centers_sums_and_counts, length_sums_and_counts);
+		}
+
+		// TODO - change these barriers to busy barriers later
+#pragma omp barrier
 
 		find_nearest_centers(points, centers, num_centers, dim,
 				thread_centers_sums_and_counts, proc_clusters_assignments,
@@ -68,7 +73,7 @@ int calculate_kmeans(int thread_id, int max_iterations,
 			}
 		}
 
-		if (thread_id > 0) {
+		if (thread_id == 0) {
 			if (world_procs_count > 1) {
 				MPI_Allreduce(MPI_IN_PLACE, thread_centers_sums_and_counts,
 						num_centers * (dim + 1), MPI_DOUBLE, MPI_SUM,
@@ -412,10 +417,10 @@ int parse_args(int argc, char **argv) {
 	if (world_proc_rank == 0) {
 		printf("Program Arguments\n");
 		printf(
-				" n = %d\n d = %d\n k = %d\n m = %d\n t = %lf\n T = %d\n o = %s\n c = %s\n p = %s\n b = %d\n",
+				" n = %d\n d = %d\n k = %d\n m = %d\n t = %lf\n T = %d\n o = %s\n c = %s\n p = %s\n b = %d\n v = %d\n",
 				num_points, dim, num_centers, max_iterations, err_threshold,
 				num_threads, output_file, centers_file, points_file,
-				bind_threads);
+				bind_threads, verbose);
 	}
 
 	for (index = optind; index < argc; index++)
