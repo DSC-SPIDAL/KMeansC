@@ -321,7 +321,7 @@ int main(int argc, char **argv) {
 	print("\n    Done in %lf ms (on Rank 0)\n", (MPI_Wtime() - time)*1000);
 
 	print("  Computing K-Means ... ");
-	int itr_count;
+
 	if (num_threads > 1){
 		/* For the thread communicator */
 		double_buffer = malloc(sizeof(double)*num_threads*num_centers*(dim+1));
@@ -352,8 +352,8 @@ int main(int argc, char **argv) {
 					centers, proc_points_count);
 		}
 
-		free(double_buffer);
-		free(int_buffer);
+		free((void*) double_buffer);
+		free((void*)int_buffer);
 	} else {
 		if (bind_threads) {
 			set_thread_affinity(world_proc_rank, 0, num_threads);
