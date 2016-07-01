@@ -82,7 +82,7 @@ void broadcast_double_array_over_threads(int thread_id, double* vals, int length
 	__sync_val_compare_and_swap (&atomic_bcast_double_count, num_threads, 0);
 
 	if (thread_id == root) {
-		memcpy(double_buffer, vals, (sizeof(double)*length));
+		memcpy((void * __restrict__)double_buffer, vals, (sizeof(double)*length));
 	}
 
 	__sync_fetch_and_add(&atomic_bcast_double_count, 1);
@@ -91,7 +91,7 @@ void broadcast_double_array_over_threads(int thread_id, double* vals, int length
 		while (atomic_bcast_double_count != num_threads) {
 			;
 		}
-		memcpy(vals, double_buffer, (sizeof(double)*length));
+		memcpy(vals, (void * __restrict__)double_buffer, (sizeof(double)*length));
 	}
 }
 
