@@ -29,90 +29,245 @@ int bind_threads;
 
 int verbose = 0;
 
-int global_buff[1];
-int calculate_kmeans(int thread_id, int max_iterations,
-		double *thread_centers_sums_and_counts,
-		int length_sums_and_counts, int num_threads, int bind_threads,
-		int verbose, int num_centers, int dim,
-		int *proc_clusters_assignments,
-		int thread_points_count,
-		int thread_points_start_idx, double err_threshold,
-		double *points, double *centers) {
+/* Thread communicator related variables */
+volatile int atomic_sum_count = 0;
+volatile int atomic_bcast_double_count=0;
+volatile int atomic_bcast_int_count=0;
+volatile int atomic_collect_count=0;
+
+volatile int *int_buffer;
+volatile double *double_buffer;
+volatile int an_int;
+
+/* The  structure of the vals should be
+    * | d0 d1 d2 .. dD N | d0 d1 d2 .. dD N |
+    * <--------C0-------> <-------Ci------->
+    * <-----------------T------------------>
+    *
+    * Ci is i th center. 0 <= i < numCenters
+    * T is the calling thread
+    * D is dimension of the point
+    * N is the count of points assigned to the corresponding center
+    */
+void sum_double_array_over_threads(int thread_id, double *vals, int length) {
+	__sync_val_compare_and_swap (&atomic_sum_count, num_threads,0);
+	/* column values are placed nearby */
+	int idx;
+	int i;
+	for (i = 0; i < length; ++i) {
+		idx = (i * num_threads) + thread_id;
+		double_buffer[idx] = vals[i];
+	}
+
+	__sync_fetch_and_add(&atomic_sum_count, 1);
+
+	// thread 0 waits for others to update
+	if (thread_id == 0) {
+		while (atomic_sum_count != num_threads) {
+			;
+		}
+		int t;
+		for (i = 0; i < length; ++i) {
+			double sum = 0.0;
+			int pos = i * num_threads;
+			for (t = 0; t < num_threads; ++t) {
+				sum += double_buffer[pos + t];
+			}
+			vals[i] = sum;
+		}
+	}
+}
+
+void broadcast_double_array_over_threads(int thread_id, double* vals, int length, int root) {
+	__sync_val_compare_and_swap (&atomic_bcast_double_count, num_threads, 0);
+
+	if (thread_id == root) {
+		memcpy(double_buffer, vals, (sizeof(double)*length));
+	}
+
+	__sync_fetch_and_add(&atomic_bcast_double_count, 1);
+
+	if (thread_id != root) {
+		while (atomic_bcast_double_count != num_threads) {
+			;
+		}
+		memcpy(vals, double_buffer, (sizeof(double)*length));
+	}
+}
+
+int broadcast_int_over_threads(int thread_id, int val, int root) {
+	__sync_val_compare_and_swap (&atomic_bcast_int_count, num_threads, 0);
+
+	if (thread_id == root) {
+		an_int = val;
+	}
+
+	__sync_fetch_and_add(&atomic_bcast_int_count, 1);
+
+	if (thread_id != root) {
+		while (atomic_bcast_int_count != num_threads) {
+			;
+		}
+	}
+	return an_int;
+}
+void collect(int thread_id, int *vals, int length, int offset) {
+	__sync_val_compare_and_swap (&atomic_collect_count, num_threads, 0);
+
+	int i;
+	for (i = 0; i < length; ++i){
+		int_buffer[offset+i] = vals[i];
+	}
+
+	__sync_fetch_and_add(&atomic_collect_count, 1);
+
+	while (atomic_collect_count != num_threads) {
+		;
+	}
+}
+
+void calculate_kmeans(int thread_id, int max_iterations, int num_threads,
+		int bind_threads, int verbose, int num_centers, int dim,
+		int thread_points_count, int thread_points_start_idx,
+		double err_threshold, double *points, double *centers, int proc_points_count) {
+
+	int length_sums_and_counts = num_centers*(dim+1);
+	double centers_sums_and_counts[length_sums_and_counts];
+	int clusters_assignments[thread_points_count];
 
 	int converged = 0;
 	int itr_count = 0;
+
+	double tmp_time;
+	double times[3]={0,0,0};
+	double loop_time = thread_id == 0 ? MPI_Wtime() : 0;
 	/* Main computation loop */
 	while (!converged && itr_count < max_iterations) {
 		++itr_count;
-		if (thread_id == 0){
-			reset_array(thread_centers_sums_and_counts, length_sums_and_counts);
-		}
+		reset_array(centers_sums_and_counts, length_sums_and_counts);
 
-		// TODO - change these barriers to busy barriers later
-#pragma omp barrier
-
+		tmp_time = thread_id == 0 ? MPI_Wtime() : 0.0;
 		find_nearest_centers(points, centers, num_centers, dim,
-				thread_centers_sums_and_counts, proc_clusters_assignments,
-				thread_points_count, thread_points_start_idx,
-				thread_id * num_centers * (dim + 1));
+				centers_sums_and_counts, clusters_assignments,
+				thread_points_count, thread_points_start_idx);
+		times[1] += thread_id == 0 ? (MPI_Wtime() - tmp_time) : 0.0;
 
-		// TODO - change these barriers to busy barriers later
-#pragma omp barrier
-
-		if (num_threads > 1 && thread_id == 0) {
-			int t, c, d;
-			for (t = 1; t < num_threads; ++t) {
-				for (c = 0; c < num_centers; ++c) {
-					for (d = 0; d < (dim + 1); ++d) {
-						int offset_within_thread = (c * (dim + 1)) + d;
-						thread_centers_sums_and_counts[offset_within_thread] +=
-								thread_centers_sums_and_counts[(t * num_centers
-										* (dim + 1)) + offset_within_thread];
-					}
-				}
-			}
+		if (num_threads > 1) {
+			sum_double_array_over_threads(thread_id, centers_sums_and_counts, length_sums_and_counts);
 		}
 
-		if (thread_id == 0) {
-			if (world_procs_count > 1) {
-				MPI_Allreduce(MPI_IN_PLACE, thread_centers_sums_and_counts,
-						num_centers * (dim + 1), MPI_DOUBLE, MPI_SUM,
-						MPI_COMM_WORLD);
-			}
+		if (world_procs_count > 1 && thread_id == 0) {
+			tmp_time = MPI_Wtime();
+			MPI_Allreduce(MPI_IN_PLACE, centers_sums_and_counts,
+					length_sums_and_counts, MPI_DOUBLE, MPI_SUM,
+					MPI_COMM_WORLD);
+			times[2] += (MPI_Wtime() - tmp_time);
+		}
 
-			converged = 1;
+		if (num_threads > 1) {
+			broadcast_double_array_over_threads(thread_id, centers_sums_and_counts, length_sums_and_counts, 0);
+		}
+
+		converged = 1;
+		if (thread_id == 0) {
 			int i;
 			int d;
 			double dist;
 			for (i = 0; i < num_centers; ++i) {
 				for (d = 0; d < dim; ++d) {
-					thread_centers_sums_and_counts[(i * (dim + 1)) + d] /=
-							thread_centers_sums_and_counts[(i * (dim + 1)) + dim];
+					centers_sums_and_counts[(i * (dim + 1)) + d] /=
+							centers_sums_and_counts[(i * (dim + 1)) + dim];
 				}
-				dist = euclidean_distance(thread_centers_sums_and_counts,
+				dist = euclidean_distance(centers_sums_and_counts,
 						centers, (i * (dim + 1)), i * dim, dim);
 				if (dist > err_threshold) {
 					// Note, can't break here as centers sums need to be divided to form new centers
 					converged = 0;
 				}
 				for (d = 0; d < dim; ++d) {
-					centers[(i * dim) + d] = thread_centers_sums_and_counts[(i
+					centers[(i * dim) + d] = centers_sums_and_counts[(i
 							* (dim + 1)) + d];
 				}
 			}
-			global_buff[0] = converged;
 		}
 
-		// TODO - change these barriers to busy barriers later
-#pragma omp barrier
-		converged = global_buff[0];
+		if (num_threads > 1) {
+			converged = broadcast_int_over_threads(thread_id, converged,0);
+		}
 	}
 
-	if (!converged && thread_id == 0) {
-		print("\n      Stopping K-Means as max iteration count %d has reached",
-				max_iterations);
+	times[0] += thread_id == 0 ? (MPI_Wtime() - loop_time) : 0.0;
+
+	if (world_procs_count > 1 && thread_id == 0) {
+		MPI_Reduce((world_proc_rank == 0 ? MPI_IN_PLACE : times), times, 3, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 	}
-	return itr_count;
+
+	if (thread_id == 0) {
+		if (!converged) {
+			print("\n      Stopping K-Means as max iteration count %d has reached",max_iterations);
+		}
+
+		print("\n    Done in %d iterations and %lf ms (avg. across MPI)", itr_count, (times[0]*1000/world_procs_count));
+		print("\n      Compute time %lf ms (thread 0 avg across MPI)", (times[1]*1000/world_procs_count));
+		print("\n      Comm time %lf ms (thread 0 avg across MPI)", (times[2]*1000/world_procs_count));
+	}
+
+	if (num_threads > 1) {
+		collect(thread_id, clusters_assignments, thread_points_count,
+				thread_points_start_idx);
+	}
+	FILE *f = fopen(output_file, "w+");
+	if (f != NULL) {
+		if (thread_id == 0) {
+			int *recv = malloc(sizeof(int) * num_points);
+			if (world_procs_count > 1) {
+				// Gather cluster assignments
+				print("  Gathering cluster assignments ...");
+				double time = MPI_Wtime();
+				int lengths[world_procs_count];
+				get_lengths_array(num_points, world_procs_count, lengths);
+				int displas[world_procs_count];
+				displas[0] = 0;
+				int i;
+				for (i = 0; i < world_procs_count - 1; ++i) {
+					displas[i + 1] = lengths[i] + displas[i];
+				}
+
+				MPI_Allgatherv(num_threads > 1 ? (int *)int_buffer : clusters_assignments, proc_points_count,
+				MPI_INT, recv, lengths, displas, MPI_INT, MPI_COMM_WORLD);
+
+				print("\n    Done in %lf ms (on Rank 0)\n",
+						(MPI_Wtime() - time) * 1000);
+			}
+
+			if (world_proc_rank == 0) {
+				double *all_points = malloc(sizeof(double) * num_points * dim);
+				FILE *fin = fopen(points_file, "rb");
+				fread(all_points, sizeof(double), num_points * dim, fin);
+				fclose(fin);
+
+				print("  Writing output file ...");
+				int *clusters =
+						(world_procs_count > 1 ?
+								recv : (num_threads > 1 ? (int *)int_buffer : clusters_assignments));
+
+				double time = MPI_Wtime();
+				int d;
+				int i;
+				for (i = 0; i < num_points; ++i) {
+					fprintf(f, "%d\t", i);
+					for (d = 0; d < dim; ++d) {
+						fprintf(f, "%lf\t", all_points[i * dim + d]);
+					}
+					fprintf(f, "%d\n", clusters[i]);
+				}
+				print("\n    Done in %lf ms (on Rank 0)\n",
+						(MPI_Wtime() - time) * 1000);
+			}
+			free(recv);
+		}
+		fclose(f);
+	}
 }
 
 int main(int argc, char **argv) {
@@ -165,16 +320,13 @@ int main(int argc, char **argv) {
 	fclose(f);
 	print("\n    Done in %lf ms (on Rank 0)\n", (MPI_Wtime() - time)*1000);
 
-	/* Data structures for computation */
-	int length_sums_and_counts = num_threads * num_centers * (dim + 1);
-	double thread_centers_sums_and_counts[length_sums_and_counts];
-	int proc_clusters_assignments[proc_points_count];
-
 	print("  Computing K-Means ... ");
-	time = MPI_Wtime();
-
 	int itr_count;
 	if (num_threads > 1){
+		/* For the thread communicator */
+		double_buffer = malloc(sizeof(double)*num_threads*num_centers*(dim+1));
+		int_buffer = malloc(sizeof(int)*proc_points_count);
+
 		omp_set_num_threads(num_threads);
 #pragma omp parallel
 		{
@@ -193,16 +345,15 @@ int main(int argc, char **argv) {
 				print_affinity(world_proc_rank, thread_id);
 			}
 
-			int tmp = calculate_kmeans(thread_id, max_iterations,
-					thread_centers_sums_and_counts, length_sums_and_counts,
-					num_threads, bind_threads, verbose, num_centers, dim,
-					proc_clusters_assignments, thread_points_counts[thread_id],
-					thread_points_start_idx[thread_id], err_threshold, points, centers);
-
-			if (thread_id == 0){
-				itr_count = tmp;
-			}
+			calculate_kmeans(thread_id, max_iterations, num_threads,
+					bind_threads, verbose, num_centers, dim,
+					thread_points_counts[thread_id],
+					thread_points_start_idx[thread_id], err_threshold, points,
+					centers, proc_points_count);
 		}
+
+		free(double_buffer);
+		free(int_buffer);
 	} else {
 		if (bind_threads) {
 			set_thread_affinity(world_proc_rank, 0, num_threads);
@@ -211,65 +362,10 @@ int main(int argc, char **argv) {
 			print_affinity(world_proc_rank, 0);
 		}
 
-		itr_count = calculate_kmeans(0, max_iterations,
-				thread_centers_sums_and_counts, length_sums_and_counts,
-				num_threads, bind_threads, verbose, num_centers, dim,
-				proc_clusters_assignments, thread_points_counts[0],
-				thread_points_start_idx[0], err_threshold, points,
-				centers);
-	}
-
-	double times[1];
-	times[0] = MPI_Wtime() - time;
-	if (world_procs_count > 1){
-		MPI_Reduce((world_proc_rank == 0 ? MPI_IN_PLACE : times), times, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-	}
-
-
-	print("\n    Done in %d iterations and %lf ms (avg. across MPI)\n", itr_count, (times[0]*1000/world_procs_count));
-
-	f = fopen(output_file, "w+");
-	if (f != NULL) {
-		int *recv = malloc(sizeof(int)*num_points);
-        if (world_procs_count > 1) {
-            // Gather cluster assignments
-            print("  Gathering cluster assignments ...");
-            time = MPI_Wtime();
-            int lengths[world_procs_count];
-            get_lengths_array(num_points, world_procs_count, lengths);
-            int displas[world_procs_count];
-            displas[0] = 0;
-            for (i = 0; i < world_procs_count - 1; ++i){
-            	displas[i+1] = lengths[i]+displas[i];
-            }
-
-            MPI_Allgatherv(proc_clusters_assignments, proc_points_count, MPI_INT, recv, lengths, displas, MPI_INT, MPI_COMM_WORLD);
-
-            print("\n    Done in %lf ms (on Rank 0)\n", (MPI_Wtime() - time)*1000);
-        }
-
-        if (world_proc_rank == 0) {
-        	double *all_points = malloc(sizeof(double) * num_points * dim);
-        	FILE *fin = fopen(points_file, "rb");
-        	fread(all_points, sizeof(double), num_points * dim, fin);
-        	fclose(fin);
-
-        	print("  Writing output file ...");
-        	int *clusters = (world_procs_count > 1 ? recv : proc_clusters_assignments);
-
-            time = MPI_Wtime();
-            int d;
-			for (i = 0; i < num_points; ++i) {
-				fprintf(f, "%d\t", i);
-				for (d = 0; d < dim; ++d){
-					fprintf(f, "%lf\t", all_points[i*dim+d]);
-				}
-				fprintf(f, "%d\n", clusters[i]);
-			}
-            print("\n    Done in %lf ms (on Rank 0)\n", (MPI_Wtime() - time)*1000);
-        }
-        free(recv);
-        fclose(f);
+		calculate_kmeans(0, max_iterations, num_threads,
+				bind_threads, verbose, num_centers, dim,
+				thread_points_counts[0], thread_points_start_idx[0],
+				err_threshold, points, centers, proc_points_count);
 	}
 
 	free(points);
@@ -281,17 +377,17 @@ int main(int argc, char **argv) {
 
 void find_nearest_centers(double *points, double *centers, int num_centers,
 		int dim, double *centers_sums_and_counts, int *clusters_assignments,
-		int points_count, int points_start_idx, int offset) {
+		int points_count, int points_start_idx) {
 	int i;
 	for (i = 0; i < points_count; ++i) {
 		int points_offset = (points_start_idx + i) * dim;
 		int min_dist_center = find_min_dist_center(points, centers, num_centers,
 				dim, points_offset);
-		int centers_offset = offset + min_dist_center * (dim + 1);
+		int centers_offset = min_dist_center * (dim + 1);
 		++centers_sums_and_counts[centers_offset + dim];
 		accumulate(points, centers_sums_and_counts, points_offset,
 				centers_offset, dim);
-		clusters_assignments[i + points_start_idx] = min_dist_center;
+		clusters_assignments[i] = min_dist_center;
 	}
 
 }
