@@ -1,0 +1,72 @@
+[j-083:261687] MCW rank 21 is not bound (or bound to all available processors)
+[j-083:261687] MCW rank 22 is not bound (or bound to all available processors)
+[j-083:261687] MCW rank 23 is not bound (or bound to all available processors)
+[j-079:253529] MCW rank 9 is not bound (or bound to all available processors)
+[j-079:253529] MCW rank 10 is not bound (or bound to all available processors)
+[j-038:10997] MCW rank 4 is not bound (or bound to all available processors)
+[j-079:253529] MCW rank 11 is not bound (or bound to all available processors)
+[j-038:10997] MCW rank 5 is not bound (or bound to all available processors)
+[j-096:175480] MCW rank 45 is not bound (or bound to all available processors)
+[j-029:25446] MCW rank 1 is not bound (or bound to all available processors)
+[j-038:10997] MCW rank 3 is not bound (or bound to all available processors)
+[j-096:175480] MCW rank 46 is not bound (or bound to all available processors)
+[j-029:25446] MCW rank 2 is not bound (or bound to all available processors)
+[j-029:25446] MCW rank 0 is not bound (or bound to all available processors)
+[j-096:175480] MCW rank 47 is not bound (or bound to all available processors)
+[j-084:137544] MCW rank 24 is not bound (or bound to all available processors)
+[j-084:137544] MCW rank 25 is not bound (or bound to all available processors)
+[j-084:137544] MCW rank 26 is not bound (or bound to all available processors)
+[j-081:84271] MCW rank 15 is not bound (or bound to all available processors)
+[j-081:84271] MCW rank 16 is not bound (or bound to all available processors)
+[j-085:19687] MCW rank 27 is not bound (or bound to all available processors)
+[j-078:235059] MCW rank 8 is not bound (or bound to all available processors)
+[j-087:173915] MCW rank 33 is not bound (or bound to all available processors)
+[j-081:84271] MCW rank 17 is not bound (or bound to all available processors)
+[j-085:19687] MCW rank 28 is not bound (or bound to all available processors)
+[j-078:235059] MCW rank 6 is not bound (or bound to all available processors)
+[j-087:173915] MCW rank 34 is not bound (or bound to all available processors)
+[j-080:82898] MCW rank 12 is not bound (or bound to all available processors)
+[j-087:173915] MCW rank 35 is not bound (or bound to all available processors)
+[j-085:19687] MCW rank 29 is not bound (or bound to all available processors)
+[j-078:235059] MCW rank 7 is not bound (or bound to all available processors)
+[j-080:82898] MCW rank 13 is not bound (or bound to all available processors)
+[j-093:130335] MCW rank 39 is not bound (or bound to all available processors)
+[j-093:130335] MCW rank 40 is not bound (or bound to all available processors)
+[j-080:82898] MCW rank 14 is not bound (or bound to all available processors)
+[j-093:130335] MCW rank 41 is not bound (or bound to all available processors)
+[j-092:141614] MCW rank 36 is not bound (or bound to all available processors)
+[j-092:141614] MCW rank 37 is not bound (or bound to all available processors)
+[j-092:141614] MCW rank 38 is not bound (or bound to all available processors)
+[j-086:139385] MCW rank 30 is not bound (or bound to all available processors)
+[j-086:139385] MCW rank 31 is not bound (or bound to all available processors)
+[j-086:139385] MCW rank 32 is not bound (or bound to all available processors)
+[j-082:251091] MCW rank 18 is not bound (or bound to all available processors)
+[j-082:251091] MCW rank 19 is not bound (or bound to all available processors)
+[j-082:251091] MCW rank 20 is not bound (or bound to all available processors)
+[j-094:106919] MCW rank 42 is not bound (or bound to all available processors)
+[j-094:106919] MCW rank 43 is not bound (or bound to all available processors)
+[j-094:106919] MCW rank 44 is not bound (or bound to all available processors)
+Program Arguments
+ n = 1000000
+ d = 2
+ k = 1000
+ m = 1000
+ t = 0.000010
+ T = 8
+ o = out.txt
+ c = /N/u/sekanaya/sali/git/github/esaliya/ccpp/KMeansC/data/1e6n_1000k/centers_LittleEndian.bin
+ p = /N/u/sekanaya/sali/git/github/esaliya/ccpp/KMeansC/data/1e6n_1000k/points_LittleEndian.bin
+ b = 0
+ v = 0
+
+Program Started on Fri Jul  1 08:36:19 2016
+  Reading points and centers ... 
+    Done in 2.083063 ms (on Rank 0)
+  Computing K-Means ... 
+    Done in 998 iterations and 28815.590322 ms (avg. across MPI)
+      Compute time 18672.825058 ms (thread 0 avg across MPI)
+      Comm time 6510.548512 ms (thread 0 avg across MPI)  Gathering cluster assignments ...
+    Done in 11.671066 ms (on Rank 0)
+  Writing output file ...
+    Done in 1112.349033 ms (on Rank 0)
+Program Terminated on Fri Jul  1 08:36:49 2016

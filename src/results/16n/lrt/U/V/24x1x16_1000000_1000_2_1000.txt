@@ -1,0 +1,40 @@
+[j-083:261775] MCW rank 7 is not bound (or bound to all available processors)
+[j-038:11100] MCW rank 1 is not bound (or bound to all available processors)
+[j-096:175572] MCW rank 15 is not bound (or bound to all available processors)
+[j-079:253623] MCW rank 3 is not bound (or bound to all available processors)
+[j-029:25555] MCW rank 0 is not bound (or bound to all available processors)
+[j-085:19775] MCW rank 9 is not bound (or bound to all available processors)
+[j-087:174003] MCW rank 11 is not bound (or bound to all available processors)
+[j-081:84365] MCW rank 5 is not bound (or bound to all available processors)
+[j-084:137632] MCW rank 8 is not bound (or bound to all available processors)
+[j-080:82992] MCW rank 4 is not bound (or bound to all available processors)
+[j-078:235159] MCW rank 2 is not bound (or bound to all available processors)
+[j-082:251185] MCW rank 6 is not bound (or bound to all available processors)
+[j-093:130427] MCW rank 13 is not bound (or bound to all available processors)
+[j-086:139473] MCW rank 10 is not bound (or bound to all available processors)
+[j-092:141702] MCW rank 12 is not bound (or bound to all available processors)
+[j-094:107011] MCW rank 14 is not bound (or bound to all available processors)
+Program Arguments
+ n = 1000000
+ d = 2
+ k = 1000
+ m = 1000
+ t = 0.000010
+ T = 24
+ o = out.txt
+ c = /N/u/sekanaya/sali/git/github/esaliya/ccpp/KMeansC/data/1e6n_1000k/centers_LittleEndian.bin
+ p = /N/u/sekanaya/sali/git/github/esaliya/ccpp/KMeansC/data/1e6n_1000k/points_LittleEndian.bin
+ b = 0
+ v = 0
+
+Program Started on Fri Jul  1 08:37:22 2016
+  Reading points and centers ... 
+    Done in 2.544165 ms (on Rank 0)
+  Computing K-Means ... 
+    Done in 998 iterations and 28684.968412 ms (avg. across MPI)
+      Compute time 20821.834475 ms (thread 0 avg across MPI)
+      Comm time 668.925673 ms (thread 0 avg across MPI)  Gathering cluster assignments ...
+    Done in 4.557133 ms (on Rank 0)
+  Writing output file ...
+    Done in 1094.727993 ms (on Rank 0)
+Program Terminated on Fri Jul  1 08:37:52 2016

@@ -1,0 +1,51 @@
+--------------------------------------------------------------------------
+WARNING: a request was made to bind a process. While the system
+supports binding the process itself, at least one node does NOT
+support binding memory to the process location.
+
+  Node:  j-029
+
+This usually is due to not having the required NUMA support installed
+on the node. In some Linux distributions, the required support is
+contained in the libnumactl and libnumactl-devel packages.
+This is a warning only; your job will continue, though performance may be degraded.
+--------------------------------------------------------------------------
+[j-029:21693] MCW rank 0 is not bound (or bound to all available processors)
+[j-083:259736] MCW rank 7 is not bound (or bound to all available processors)
+[j-096:173500] MCW rank 15 is not bound (or bound to all available processors)
+[j-079:251536] MCW rank 3 is not bound (or bound to all available processors)
+[j-038:08933] MCW rank 1 is not bound (or bound to all available processors)
+[j-084:135599] MCW rank 8 is not bound (or bound to all available processors)
+[j-078:233025] MCW rank 2 is not bound (or bound to all available processors)
+[j-085:17643] MCW rank 9 is not bound (or bound to all available processors)
+[j-080:80911] MCW rank 4 is not bound (or bound to all available processors)
+[j-081:80841] MCW rank 5 is not bound (or bound to all available processors)
+[j-082:247660] MCW rank 6 is not bound (or bound to all available processors)
+[j-087:171961] MCW rank 11 is not bound (or bound to all available processors)
+[j-093:128360] MCW rank 13 is not bound (or bound to all available processors)
+[j-092:138264] MCW rank 12 is not bound (or bound to all available processors)
+[j-086:137433] MCW rank 10 is not bound (or bound to all available processors)
+[j-094:104941] MCW rank 14 is not bound (or bound to all available processors)
+Program Arguments
+ n = 1000000
+ d = 2
+ k = 1000
+ m = 1000
+ t = 0.000010
+ T = 24
+ o = out.txt
+ c = /N/u/sekanaya/sali/git/github/esaliya/ccpp/KMeansC/data/1e6n_1000k/centers_LittleEndian.bin
+ p = /N/u/sekanaya/sali/git/github/esaliya/ccpp/KMeansC/data/1e6n_1000k/points_LittleEndian.bin
+ b = 1
+ v = 0
+
+Program Started on Thu Jun 30 17:57:39 2016
+  Reading points and centers ... 
+    Done in 2.567053 ms (on Rank 0)
+  Computing K-Means ... 
+    Done in 998 iterations and 28826.699689 ms (avg. across MPI)
+  Gathering cluster assignments ...
+    Done in 4.684925 ms (on Rank 0)
+  Writing output file ...
+    Done in 1089.756012 ms (on Rank 0)
+Program Terminated on Thu Jun 30 17:58:10 2016
