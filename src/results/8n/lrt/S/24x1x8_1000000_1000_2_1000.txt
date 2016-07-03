@@ -1,0 +1,32 @@
+[j-044:52510] MCW rank 0 is not bound (or bound to all available processors)
+[j-042:57307] MCW rank 7 is not bound (or bound to all available processors)
+[j-028:251817] MCW rank 3 is not bound (or bound to all available processors)
+[j-026:31184] MCW rank 1 is not bound (or bound to all available processors)
+[j-040:55256] MCW rank 5 is not bound (or bound to all available processors)
+[j-039:51422] MCW rank 4 is not bound (or bound to all available processors)
+[j-027:92456] MCW rank 2 is not bound (or bound to all available processors)
+[j-041:55950] MCW rank 6 is not bound (or bound to all available processors)
+Program Arguments
+ n = 1000000
+ d = 2
+ k = 1000
+ m = 1000
+ t = 0.000010
+ T = 24
+ o = out.txt
+ c = /N/u/sekanaya/sali/git/github/esaliya/ccpp/KMeansC/data/1e6n_1000k/centers_LittleEndian.bin
+ p = /N/u/sekanaya/sali/git/github/esaliya/ccpp/KMeansC/data/1e6n_1000k/points_LittleEndian.bin
+ b = 1
+ v = 0
+
+Program Started on Sat Jul  2 15:28:50 2016
+  Reading points and centers ... 
+    Done in 3.046989 ms (on Rank 0)
+  Computing K-Means ... 
+    Done in 998 iterations and 29333.622098 ms (avg. across MPI)
+      Compute time 28762.558490 ms (thread 0 avg across MPI)
+      Comm time 266.331971 ms (thread 0 avg across MPI)  Gathering cluster assignments ...
+    Done in 4.061937 ms (on Rank 0)
+  Writing output file ...
+    Done in 1095.013142 ms (on Rank 0)
+Program Terminated on Sat Jul  2 15:29:21 2016

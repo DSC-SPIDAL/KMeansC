@@ -1,0 +1,8 @@
+1x24x8_1000000_1000_2_1000	    Done in 998 iterations and 29184.678673 ms (avg. across MPI)
+6x4x8_1000000_1000_2_1000	    Done in 998 iterations and 29106.769338 ms (avg. across MPI)
+2x12x8_1000000_1000_2_1000	    Done in 998 iterations and 29783.676306 ms (avg. across MPI)
+12x2x8_1000000_1000_2_1000	    Done in 998 iterations and 29086.768806 ms (avg. across MPI)
+24x1x8_1000000_1000_2_1000	    Done in 998 iterations and 29333.622098 ms (avg. across MPI)
+4x6x8_1000000_1000_2_1000	    Done in 998 iterations and 29047.574610 ms (avg. across MPI)
+3x8x8_1000000_1000_2_1000	    Done in 998 iterations and 29740.707844 ms (avg. across MPI)
+8x3x8_1000000_1000_2_1000	    Done in 998 iterations and 29496.228347 ms (avg. across MPI)

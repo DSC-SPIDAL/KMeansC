@@ -1,0 +1,40 @@
+[j-044:52460] MCW rank 0 is not bound (or bound to all available processors)
+[j-044:52460] MCW rank 1 is not bound (or bound to all available processors)
+[j-039:51378] MCW rank 8 is not bound (or bound to all available processors)
+[j-039:51378] MCW rank 9 is not bound (or bound to all available processors)
+[j-042:57263] MCW rank 15 is not bound (or bound to all available processors)
+[j-042:57263] MCW rank 14 is not bound (or bound to all available processors)
+[j-027:92409] MCW rank 5 is not bound (or bound to all available processors)
+[j-028:251773] MCW rank 7 is not bound (or bound to all available processors)
+[j-028:251773] MCW rank 6 is not bound (or bound to all available processors)
+[j-027:92409] MCW rank 4 is not bound (or bound to all available processors)
+[j-026:31137] MCW rank 2 is not bound (or bound to all available processors)
+[j-026:31137] MCW rank 3 is not bound (or bound to all available processors)
+[j-040:55212] MCW rank 10 is not bound (or bound to all available processors)
+[j-040:55212] MCW rank 11 is not bound (or bound to all available processors)
+[j-041:55906] MCW rank 13 is not bound (or bound to all available processors)
+[j-041:55906] MCW rank 12 is not bound (or bound to all available processors)
+Program Arguments
+ n = 1000000
+ d = 2
+ k = 1000
+ m = 1000
+ t = 0.000010
+ T = 12
+ o = out.txt
+ c = /N/u/sekanaya/sali/git/github/esaliya/ccpp/KMeansC/data/1e6n_1000k/centers_LittleEndian.bin
+ p = /N/u/sekanaya/sali/git/github/esaliya/ccpp/KMeansC/data/1e6n_1000k/points_LittleEndian.bin
+ b = 1
+ v = 0
+
+Program Started on Sat Jul  2 15:28:18 2016
+  Reading points and centers ... 
+    Done in 2.462864 ms (on Rank 0)
+  Computing K-Means ... 
+    Done in 998 iterations and 29086.768806 ms (avg. across MPI)
+      Compute time 28723.924696 ms (thread 0 avg across MPI)
+      Comm time 237.722859 ms (thread 0 avg across MPI)  Gathering cluster assignments ...
+    Done in 4.561901 ms (on Rank 0)
+  Writing output file ...
+    Done in 1095.659018 ms (on Rank 0)
+Program Terminated on Sat Jul  2 15:28:49 2016

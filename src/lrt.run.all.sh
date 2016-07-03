@@ -5,7 +5,7 @@ verbose=
 explicitbind=$1
 #can be core/socket/none
 procbind=$2
-nodes=16
+nodes=8
 name="$nodes"n
 nodefile=nodes.$name.txt
 
