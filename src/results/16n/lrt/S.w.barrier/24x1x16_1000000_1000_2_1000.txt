@@ -1,0 +1,41 @@
+[j-083:216525] MCW rank 7 is not bound (or bound to all available processors)
+[j-029:244803] MCW rank 0 is not bound (or bound to all available processors)
+[j-038:230741] MCW rank 1 is not bound (or bound to all available processors)
+[j-079:201146] MCW rank 3 is not bound (or bound to all available processors)
+[j-096:130476] MCW rank 15 is not bound (or bound to all available processors)
+[j-085:233219] MCW rank 9 is not bound (or bound to all available processors)
+[j-080:32603] MCW rank 4 is not bound (or bound to all available processors)
+[j-087:131297] MCW rank 11 is not bound (or bound to all available processors)
+[j-084:91510] MCW rank 8 is not bound (or bound to all available processors)
+[j-081:37622] MCW rank 5 is not bound (or bound to all available processors)
+[j-078:182493] MCW rank 2 is not bound (or bound to all available processors)
+[j-092:95789] MCW rank 12 is not bound (or bound to all available processors)
+[j-086:97065] MCW rank 10 is not bound (or bound to all available processors)
+[j-093:83712] MCW rank 13 is not bound (or bound to all available processors)
+[j-082:205986] MCW rank 6 is not bound (or bound to all available processors)
+[j-094:62762] MCW rank 14 is not bound (or bound to all available processors)
+Program Arguments
+ n = 1000000
+ d = 2
+ k = 1000
+ m = 1000
+ t = 0.000010
+ T = 24
+ o = out.txt
+ c = /N/u/sekanaya/sali/git/github/esaliya/ccpp/KMeansC/data/1e6n_1000k/centers_LittleEndian.bin
+ p = /N/u/sekanaya/sali/git/github/esaliya/ccpp/KMeansC/data/1e6n_1000k/points_LittleEndian.bin
+ b = 1
+ v = 0
+
+Program Started on Sun Jul  3 23:23:55 2016
+  Reading points and centers ... 
+    Done in 2.625942 ms (on Rank 0)
+  Computing K-Means ... 
+    Done in 998 iterations and 15024.824888 ms (avg. across MPI)
+      Compute time 14406.764507 ms (thread 0 avg across MPI)
+      Comm time 111.659393 ms (thread 0 avg across MPI)
+      Barrier time 209.337637 ms (thread 0 avg across MPI)  Gathering cluster assignments ...
+    Done in 8.038998 ms (on Rank 0)
+  Writing output file ...
+    Done in 1090.378046 ms (on Rank 0)
+Program Terminated on Sun Jul  3 23:24:11 2016
