@@ -142,6 +142,11 @@ void calculate_kmeans(int thread_id, int max_iterations, int num_threads,
 	double tmp_time;
 	double times[4]={0,0,0,0};
 	double loop_time = thread_id == 0 ? MPI_Wtime() : 0;
+
+	int field_count = 7;// fields are comp-arrival, comp-time, comm-arrival, barrier-time, comm-time, barrier+comm time, comm-depart
+	double *fields = malloc(sizeof(double)*field_count*max_iterations);
+	double *recv_fields = malloc(sizeof(double)*field_count*max_iterations*world_procs_count);
+
 	/* Main computation loop */
 	while (!converged && itr_count < max_iterations) {
 		++itr_count;
