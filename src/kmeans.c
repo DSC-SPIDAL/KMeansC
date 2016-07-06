@@ -132,7 +132,8 @@ void calculate_kmeans(int thread_id, int max_iterations, int num_threads,
 		double err_threshold, double *points, double *centers, int proc_points_count) {
 
 	int length_sums_and_counts = num_centers*(dim+1);
-	double centers_sums_and_counts[length_sums_and_counts];
+	double *centers_sums_and_counts = malloc(sizeof(double)*length_sums_and_counts);
+	double *recv = malloc(sizeof(double)*length_sums_and_counts);
 	int clusters_assignments[thread_points_count];
 
 	int converged = 0;
@@ -162,14 +163,15 @@ void calculate_kmeans(int thread_id, int max_iterations, int num_threads,
 			times[3] += (MPI_Wtime() - tmp_time);
 			
       tmp_time = MPI_Wtime();
-			MPI_Allreduce(MPI_IN_PLACE, centers_sums_and_counts,
+			MPI_Allreduce(centers_sums_and_counts, recv,
 					length_sums_and_counts, MPI_DOUBLE, MPI_SUM,
 					MPI_COMM_WORLD);
 			times[2] += (MPI_Wtime() - tmp_time);
 		}
 
 		if (num_threads > 1) {
-			broadcast_double_array_over_threads(thread_id, centers_sums_and_counts, length_sums_and_counts, 0);
+			//broadcast_double_array_over_threads(thread_id, centers_sums_and_counts, length_sums_and_counts, 0);
+			broadcast_double_array_over_threads(thread_id,recv, length_sums_and_counts, 0);
 		}
 
 		converged = 1;
@@ -179,17 +181,21 @@ void calculate_kmeans(int thread_id, int max_iterations, int num_threads,
 			double dist;
 			for (i = 0; i < num_centers; ++i) {
 				for (d = 0; d < dim; ++d) {
-					centers_sums_and_counts[(i * (dim + 1)) + d] /=
-							centers_sums_and_counts[(i * (dim + 1)) + dim];
+					//centers_sums_and_counts[(i * (dim + 1)) + d] /=
+					//		centers_sums_and_counts[(i * (dim + 1)) + dim];
+					recv[(i * (dim + 1)) + d] /=
+							recv[(i * (dim + 1)) + dim];
 				}
-				dist = euclidean_distance(centers_sums_and_counts,
+				//dist = euclidean_distance(centers_sums_and_counts,
+				dist = euclidean_distance(recv,
 						centers, (i * (dim + 1)), i * dim, dim);
 				if (dist > err_threshold) {
 					// Note, can't break here as centers sums need to be divided to form new centers
 					converged = 0;
 				}
 				for (d = 0; d < dim; ++d) {
-					centers[(i * dim) + d] = centers_sums_and_counts[(i
+					//centers[(i * dim) + d] = centers_sums_and_counts[(i
+					centers[(i * dim) + d] = recv[(i
 							* (dim + 1)) + d];
 				}
 			}
@@ -199,6 +205,8 @@ void calculate_kmeans(int thread_id, int max_iterations, int num_threads,
 			converged = broadcast_int_over_threads(thread_id, converged,0);
 		}
 	}
+  free(centers_sums_and_counts);
+  free(recv);
 
 	times[0] += thread_id == 0 ? (MPI_Wtime() - loop_time) : 0.0;
 

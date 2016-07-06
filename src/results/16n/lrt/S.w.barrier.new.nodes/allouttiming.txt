@@ -1,0 +1,32 @@
+1x24x16_1000000_1000_2_1000	    Done in 998 iterations and 16518.797503 ms (avg. across MPI)
+4x6x16_1000000_1000_2_1000	    Done in 998 iterations and 16275.039618 ms (avg. across MPI)
+3x8x16_1000000_1000_2_1000	    Done in 998 iterations and 16170.731440 ms (avg. across MPI)
+2x12x16_1000000_1000_2_1000	    Done in 998 iterations and 16420.854011 ms (avg. across MPI)
+12x2x16_1000000_1000_2_1000	    Done in 998 iterations and 15612.015471 ms (avg. across MPI)
+24x1x16_1000000_1000_2_1000	    Done in 998 iterations and 15749.137089 ms (avg. across MPI)
+8x3x16_1000000_1000_2_1000	    Done in 998 iterations and 16457.125346 ms (avg. across MPI)
+6x4x16_1000000_1000_2_1000	    Done in 998 iterations and 16158.502262 ms (avg. across MPI)
+1x24x16_1000000_1000_2_1000	      Compute time 14352.830591 ms (thread 0 avg across MPI)
+4x6x16_1000000_1000_2_1000	      Compute time 14362.571908 ms (thread 0 avg across MPI)
+3x8x16_1000000_1000_2_1000	      Compute time 14353.742899 ms (thread 0 avg across MPI)
+2x12x16_1000000_1000_2_1000	      Compute time 14355.835088 ms (thread 0 avg across MPI)
+12x2x16_1000000_1000_2_1000	      Compute time 14371.759482 ms (thread 0 avg across MPI)
+24x1x16_1000000_1000_2_1000	      Compute time 14404.267907 ms (thread 0 avg across MPI)
+8x3x16_1000000_1000_2_1000	      Compute time 14377.420311 ms (thread 0 avg across MPI)
+6x4x16_1000000_1000_2_1000	      Compute time 14364.548523 ms (thread 0 avg across MPI)
+1x24x16_1000000_1000_2_1000	      Comm time 495.398027 ms (thread 0 avg across MPI)
+4x6x16_1000000_1000_2_1000	      Comm time 204.835830 ms (thread 0 avg across MPI)
+3x8x16_1000000_1000_2_1000	      Comm time 240.307014 ms (thread 0 avg across MPI)
+2x12x16_1000000_1000_2_1000	      Comm time 308.275279 ms (thread 0 avg across MPI)
+12x2x16_1000000_1000_2_1000	      Comm time 144.749478 ms (thread 0 avg across MPI)
+24x1x16_1000000_1000_2_1000	      Comm time 120.414138 ms (thread 0 avg across MPI)
+8x3x16_1000000_1000_2_1000	      Comm time 160.906613 ms (thread 0 avg across MPI)
+6x4x16_1000000_1000_2_1000	      Comm time 182.660814 ms (thread 0 avg across MPI)
+1x24x16_1000000_1000_2_1000	      Barrier time 1654.764409 ms (thread 0 avg across MPI)  Gathering cluster assignments ...
+4x6x16_1000000_1000_2_1000	      Barrier time 1649.003670 ms (thread 0 avg across MPI)  Gathering cluster assignments ...
+3x8x16_1000000_1000_2_1000	      Barrier time 1522.745291 ms (thread 0 avg across MPI)  Gathering cluster assignments ...
+2x12x16_1000000_1000_2_1000	      Barrier time 1716.885804 ms (thread 0 avg across MPI)  Gathering cluster assignments ...
+12x2x16_1000000_1000_2_1000	      Barrier time 970.072277 ms (thread 0 avg across MPI)  Gathering cluster assignments ...
+24x1x16_1000000_1000_2_1000	      Barrier time 874.265864 ms (thread 0 avg across MPI)  Gathering cluster assignments ...
+8x3x16_1000000_1000_2_1000	      Barrier time 1793.245773 ms (thread 0 avg across MPI)  Gathering cluster assignments ...
+6x4x16_1000000_1000_2_1000	      Barrier time 1524.318803 ms (thread 0 avg across MPI)  Gathering cluster assignments ...
