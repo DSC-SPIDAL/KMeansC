@@ -164,7 +164,7 @@ void calculate_kmeans(int thread_id, int max_iterations, int num_threads,
 
 		if (world_procs_count > 1 && thread_id == 0) {
 			tmp_time = MPI_Wtime();
-      MPI_Barrier(MPI_COMM_WORLD);
+      //MPI_Barrier(MPI_COMM_WORLD);
 			times[3] += (MPI_Wtime() - tmp_time);
 			
       tmp_time = MPI_Wtime();
