@@ -81,8 +81,8 @@ int main(int argc, char **argv) {
 
 	/* Data structures for computation */
 	int length_sums_and_counts = num_threads * num_centers * (dim + 1);
-	double thread_centers_sums_and_counts[length_sums_and_counts];
-	int proc_clusters_assignments[proc_points_count];
+	double *thread_centers_sums_and_counts = malloc(sizeof(double)*length_sums_and_counts);
+	int *proc_clusters_assignments = malloc(sizeof(int)*proc_points_count);
 
 	int itr_count = 0;
 	int converged = 0;
@@ -177,6 +177,8 @@ int main(int argc, char **argv) {
 		}
 	}
 
+  free(thread_centers_sums_and_counts);
+
 	if (!converged) {
 		if (world_proc_rank == 0) {
 			printf(
@@ -235,6 +237,7 @@ int main(int argc, char **argv) {
             print("\n    Done in %lf ms (on Rank 0)\n", (MPI_Wtime() - time)*1000);
         }
         free(recv);
+        free(proc_clusters_assignments);
         fclose(f);
 	}
 
