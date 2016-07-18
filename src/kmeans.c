@@ -134,7 +134,7 @@ void calculate_kmeans(int thread_id, int max_iterations, int num_threads,
 	int length_sums_and_counts = num_centers*(dim+1);
 	double *centers_sums_and_counts = malloc(sizeof(double)*length_sums_and_counts);
 	double *recv = malloc(sizeof(double)*length_sums_and_counts);
-	int clusters_assignments[thread_points_count];
+	int *clusters_assignments = malloc(sizeof(int)*thread_points_count);
 
 	int converged = 0;
 	int itr_count = 0;
@@ -282,6 +282,7 @@ void calculate_kmeans(int thread_id, int max_iterations, int num_threads,
 				print("\n    Done in %lf ms (on Rank 0)\n",
 						(MPI_Wtime() - time) * 1000);
 			}
+      free(clusters_assignments);
 			free(recv);
 		}
 		fclose(f);
@@ -371,7 +372,7 @@ int main(int argc, char **argv) {
 		}
 
 		free((void*) double_buffer);
-		free((void*)int_buffer);
+		free((void*) int_buffer);
 	} else {
 		if (bind_threads) {
 			set_thread_affinity(world_proc_rank, 0, num_threads);
