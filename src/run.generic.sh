@@ -2,7 +2,7 @@
 
 wd=/N/u/sekanaya/sali/projects/flink/kmeans/data2
 points=1000000
-centers=500000
+centers=50000
 exp="$points"_"$centers"
 p=$wd/$exp/points_LE.bin
 c=$wd/$exp/centers_LE.bin

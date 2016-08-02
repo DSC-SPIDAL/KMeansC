@@ -91,7 +91,8 @@ int main(int argc, char **argv) {
 	print("  Computing K-Means ... ");
 	time = MPI_Wtime();
 	/* Main computation loop */
-	while (!converged && itr_count < max_iterations) {
+  //while (!converged && itr_count < max_iterations) {
+	while (itr_count < max_iterations) {
 		++itr_count;
 		reset_array(thread_centers_sums_and_counts, length_sums_and_counts);
 
@@ -115,7 +116,7 @@ int main(int argc, char **argv) {
 					print_affinity(world_proc_rank, thread_id);
 				} 
 
-				find_nearest_centers(points, centers, num_centers, dim,
+			find_nearest_centers(points, centers, num_centers, dim,
 									thread_centers_sums_and_counts, proc_clusters_assignments,
 									thread_points_counts[thread_id], thread_points_start_idx[thread_id], thread_id*num_centers*(dim+1));
 

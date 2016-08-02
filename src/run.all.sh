@@ -16,6 +16,6 @@ nodefile=nodes.$name.txt
 ./run.generic.sh 4 6 $nodefile $nodes $explicitbind $procbind $verbose
 ./run.generic.sh 6 4 $nodefile $nodes $explicitbind $procbind $verbose
 ./run.generic.sh 8 3 $nodefile $nodes $explicitbind $procbind $verbose
-./run.generic.sh 12 2 $nodefile $nodes $explicitbind $procbind $verbose
 COMMENT
-./run.generic.sh 24 1 $nodefile $nodes $explicitbind $procbind $verbose
+./run.generic.sh 12 2 $nodefile $nodes $explicitbind $procbind $verbose
+#./run.generic.sh 24 1 $nodefile $nodes $explicitbind $procbind $verbose
