@@ -1,0 +1,54 @@
+--------------------------------------------------------------------------
+WARNING: a request was made to bind a process. While the system
+supports binding the process itself, at least one node does NOT
+support binding memory to the process location.
+
+  Node:  j-082
+
+This usually is due to not having the required NUMA support installed
+on the node. In some Linux distributions, the required support is
+contained in the libnumactl and libnumactl-devel packages.
+This is a warning only; your job will continue, though performance may be degraded.
+--------------------------------------------------------------------------
+[j-012:71330] MCW rank 7 is not bound (or bound to all available processors)
+[j-003:202387] MCW rank 1 is not bound (or bound to all available processors)
+[j-020:138976] MCW rank 15 is not bound (or bound to all available processors)
+[j-008:161536] MCW rank 3 is not bound (or bound to all available processors)
+[j-010:261236] MCW rank 5 is not bound (or bound to all available processors)
+[j-082:242299] MCW rank 0 is not bound (or bound to all available processors)
+[j-016:231430] MCW rank 11 is not bound (or bound to all available processors)
+[j-005:93950] MCW rank 2 is not bound (or bound to all available processors)
+[j-009:233689] MCW rank 4 is not bound (or bound to all available processors)
+[j-013:241703] MCW rank 8 is not bound (or bound to all available processors)
+[j-014:116413] MCW rank 9 is not bound (or bound to all available processors)
+[j-018:124510] MCW rank 13 is not bound (or bound to all available processors)
+[j-011:173220] MCW rank 6 is not bound (or bound to all available processors)
+[j-017:202321] MCW rank 12 is not bound (or bound to all available processors)
+[j-015:129027] MCW rank 10 is not bound (or bound to all available processors)
+[j-019:195382] MCW rank 14 is not bound (or bound to all available processors)
+Program Arguments
+ n = 1000000
+ d = 2
+ k = 500000
+ m = 100
+ t = 0.000010
+ T = 24
+ o = out.txt
+ c = /N/u/sekanaya/sali/projects/flink/kmeans/data2/1000000_500000/centers_LE.bin
+ p = /N/u/sekanaya/sali/projects/flink/kmeans/data2/1000000_500000/points_LE.bin
+ b = 1
+ v = 0
+
+Program Started on Thu Jul 28 01:53:29 2016
+  Reading points and centers ... 
+    Done in 10.298967 ms (on Rank 0)
+  Computing K-Means ... 
+      Stopping K-Means as max iteration count 100 has reached
+    Done in 100 iterations and 1595322.486877 ms (avg. across MPI)
+      Compute time 1570725.022674 ms (thread 0 avg across MPI)
+      Comm time 10922.491506 ms (thread 0 avg across MPI)
+      Barrier time 0.013262 ms (thread 0 avg across MPI)  Gathering cluster assignments ...
+    Done in 4.381180 ms (on Rank 0)
+  Writing output file ...
+    Done in 1103.739023 ms (on Rank 0)
+Program Terminated on Thu Jul 28 02:20:06 2016

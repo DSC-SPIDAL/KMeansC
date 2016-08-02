@@ -148,7 +148,8 @@ void calculate_kmeans(int thread_id, int max_iterations, int num_threads,
 	double *recv_fields = malloc(sizeof(double)*field_count*max_iterations*world_procs_count);
 
 	/* Main computation loop */
-	while (!converged && itr_count < max_iterations) {
+	//while (!converged && itr_count < max_iterations) {
+	while (itr_count < max_iterations) {
 		++itr_count;
 		reset_array(centers_sums_and_counts, length_sums_and_counts);
 
@@ -215,7 +216,11 @@ void calculate_kmeans(int thread_id, int max_iterations, int num_threads,
 
 	times[0] += thread_id == 0 ? (MPI_Wtime() - loop_time) : 0.0;
 
+  double min_times[4];
+  double max_times[4];
 	if (world_procs_count > 1 && thread_id == 0) {
+		MPI_Reduce(times, min_times, 4, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
+		MPI_Reduce(times, max_times, 4, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 		MPI_Reduce((world_proc_rank == 0 ? MPI_IN_PLACE : times), times, 4, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 	}
 
@@ -225,7 +230,7 @@ void calculate_kmeans(int thread_id, int max_iterations, int num_threads,
 		}
 
 		print("\n    Done in %d iterations and %lf ms (avg. across MPI)", itr_count, (times[0]*1000/world_procs_count));
-		print("\n      Compute time %lf ms (thread 0 avg across MPI)", (times[1]*1000/world_procs_count));
+		print("\n      Compute time %lf ms (thread 0 avg across MPI) %lf ms (min) %lf ms (max)", (times[1]*1000/world_procs_count), min_times[1]*1000, max_times[1]*1000);
 		print("\n      Comm time %lf ms (thread 0 avg across MPI)", (times[2]*1000/world_procs_count));
 		print("\n      Barrier time %lf ms (thread 0 avg across MPI)", (times[3]*1000/world_procs_count));
 	}
